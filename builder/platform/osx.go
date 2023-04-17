@@ -2,26 +2,23 @@
 // +build darwin
 
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with p work for additional information
- * regarding copyright ownership.  The ASF licenses p file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use p file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright 2023 github.com/fatima-go
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * @project fatima
- * @author DeockJin Chung (jin.freestyle@gmail.com)
- * @date 22. 8. 31. 오전 11:28
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @project fatima-core
+ * @author dave
+ * @date 23. 4. 12. 오후 1:41
  */
 
 package platform
@@ -39,11 +36,6 @@ import (
 	"unsafe"
 )
 
-/**
- * @author jin.freestyle@gmail.com
- * https://github.com/mitchellh/go-ps
- */
-
 type OSPlatform struct {
 }
 
@@ -60,7 +52,7 @@ func (t *OSPlatform) EnsureSingleInstance(proc fatima.SystemProc) error {
 
 		bin := strings.Split(p.Executable(), " ")
 		if bin[0] == proc.GetProgramName() {
-			return errors.New("aleady process running...")
+			return errors.New("already process running...")
 		}
 	}
 

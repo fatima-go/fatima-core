@@ -3,10 +3,11 @@ module github.com/fatima-go/fatima-core
 go 1.17
 
 require (
-	github.com/fatima-go/fatima-log v0.0.1
+	github.com/fatima-go/fatima-log v1.0.0
 	github.com/robfig/cron v1.2.0
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
