@@ -23,6 +23,7 @@ package builder
 import (
 	"fmt"
 	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/crypt"
 	"net"
 	"path/filepath"
 	"strconv"
@@ -103,7 +104,7 @@ func (reader *PropertyPredefineReader) prepareMatchers() {
 		matchers = append(matchers, v.getValue())
 	}
 	builtinReplacer := strings.NewReplacer(matchers...)
-	props, _ := readProperties(filepath.Join(reader.env.GetFolderGuide().GetConfFolder(), "fatima-package-predefine.properties"))
+	props, _ := readProperties(filepath.Join(reader.env.GetFolderGuide().GetConfFolder(), FatimaGlobalPredefinePropertiesFile))
 
 	// add package global properties to matchers
 	for k, v := range props {
@@ -111,6 +112,12 @@ func (reader *PropertyPredefineReader) prepareMatchers() {
 
 		// we have to call 'Replace' because package global property contains 'builtin'
 		valueForm := builtinReplacer.Replace(v)
+
+		// need secret replace
+		if strings.HasSuffix(k, SecretKeySuffix) {
+			valueForm = crypt.ResolveSecret(valueForm)
+		}
+
 		reader.defines[keyForm] = valueForm
 		matchers = append(matchers, keyForm)
 		matchers = append(matchers, valueForm)
@@ -119,6 +126,11 @@ func (reader *PropertyPredefineReader) prepareMatchers() {
 	// builtinReplacer : new Replacer from a list of old, new string pairs
 	reader.replacer = strings.NewReplacer(matchers...)
 }
+
+const (
+	FatimaGlobalPredefinePropertiesFile = "fatima-package-predefine.properties"
+	SecretKeySuffix                     = ".secret"
+)
 
 func (reader *PropertyPredefineReader) appendBuiltinVar(v variableValue) {
 	reader.builtinVariables = append(reader.builtinVariables, v)

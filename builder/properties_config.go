@@ -23,6 +23,7 @@ package builder
 import (
 	"fmt"
 	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/crypt"
 	"github.com/fatima-go/fatima-log"
 	"os"
 	"path/filepath"
@@ -68,6 +69,12 @@ func NewPropertyConfigReader(env fatima.FatimaEnv, predefines fatima.Predefines)
 			// maybe fatima global predefine file (fatima-package-predefines.properties) contains "var.db.write.url"
 			// so we need to resolve(replace)
 			instance.configuration[k] = predefines.ResolvePredefine(v) // PropertyPredefineReader.ResolvePredefine()
+
+			// need secret replace
+			if strings.HasSuffix(k, SecretKeySuffix) {
+				// overwrite with resolved content1
+				instance.configuration[k] = crypt.ResolveSecret(v)
+			}
 		}
 	}
 	return instance
