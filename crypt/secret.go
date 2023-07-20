@@ -25,6 +25,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
+	"fmt"
 	"github.com/fatima-go/fatima-core"
 	log "github.com/fatima-go/fatima-log"
 	"os"
@@ -71,7 +72,7 @@ var secretDecryptFuncNative = secretDecryptNative
 var secretDecryptFuncB64 = secretDecryptB64
 var secretDecryptFuncAWS = secretDecryptAWS
 
-func SetSecretDecryptFunc(schemeName string, decryptFunc SecretDecryptFunc) {
+func SetSecretDecryptFunc(schemeName string, decryptFunc SecretDecryptFunc) error {
 	switch schemeName {
 	case SecretSchemeNative:
 		secretDecryptFuncNative = decryptFunc
@@ -79,7 +80,10 @@ func SetSecretDecryptFunc(schemeName string, decryptFunc SecretDecryptFunc) {
 		secretDecryptFuncB64 = decryptFunc
 	case SecretSchemeAWS:
 		secretDecryptFuncAWS = decryptFunc
+	default:
+		return fmt.Errorf("invalid secret scheme %s", schemeName)
 	}
+	return nil
 }
 
 var cipherKeyByteFromProfile []byte
@@ -92,7 +96,11 @@ const (
 
 func init() {
 	// example : dev, qa, prod
-	profile := []byte(os.Getenv(fatima.ENV_FATIMA_PROFILE))
+	envProfile := os.Getenv(fatima.ENV_FATIMA_PROFILE)
+	if len(envProfile) == 0 {
+		envProfile = "LOCAL"
+	}
+	profile := []byte(strings.ToLower(envProfile))
 	cipherKeyByteFromProfile = make([]byte, CipherKeyBytesLength)
 	copy(cipherKeyByteFromProfile, profile[:CipherKeyBytesLength])
 	cipherIVKeyByteFromProfile = cipherKeyByteFromProfile[:CipherIVKeyLen]
@@ -119,6 +127,21 @@ func secretDecryptNative(src string) string {
 	return string(unpad(plaintextBytes))
 }
 
+func secretEncryptNative(src string) string {
+	cipherBlock, err := aes.NewCipher(cipherKeyByteFromProfile)
+	if err != nil {
+		log.Warn("NewCipher error [%s] : %s", cipherKeyByteFromProfile, err.Error())
+		return src
+	}
+
+	cbcEncryptor := cipher.NewCBCEncrypter(cipherBlock, cipherIVKeyByteFromProfile)
+	paddedPlaintextBytes := pad([]byte(src), cbcEncryptor.BlockSize())
+
+	ciphertextBytes := make([]byte, len(paddedPlaintextBytes))
+	cbcEncryptor.CryptBlocks(ciphertextBytes, paddedPlaintextBytes)
+	return base64.StdEncoding.EncodeToString(ciphertextBytes)
+}
+
 func pad(blocks []byte, blockSize int) []byte {
 	padLen := blockSize - len(blocks)%blockSize
 	padBlocks := bytes.Repeat([]byte{byte(padLen)}, padLen)
@@ -138,6 +161,10 @@ func secretDecryptB64(src string) string {
 		return src
 	}
 	return string(decoded)
+}
+
+func secretEncryptB64(src string) string {
+	return base64.StdEncoding.EncodeToString([]byte(src))
 }
 
 func secretDecryptAWS(src string) string {
