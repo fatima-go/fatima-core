@@ -88,6 +88,7 @@ func SetSecretDecryptFunc(schemeName string, decryptFunc SecretDecryptFunc) erro
 
 var cipherKeyByteFromProfile []byte
 var cipherIVKeyByteFromProfile []byte
+var awsSecretManager *AWSSecretManager
 
 const (
 	CipherKeyBytesLength = 32
@@ -104,6 +105,16 @@ func init() {
 	cipherKeyByteFromProfile = make([]byte, CipherKeyBytesLength)
 	copy(cipherKeyByteFromProfile, profile[:CipherKeyBytesLength])
 	cipherIVKeyByteFromProfile = cipherKeyByteFromProfile[:CipherIVKeyLen]
+
+	// TODO AwsSecretManager 객체를 외부에서 주입받는 방법이 더 편할수도 있을듯.. 그렇다면 AWS 인증 설정 또한 자유 자재로 구현이 가능해진다
+	awsSecretManager = NewAWSSecretManager()
+	awsSecretManager.SetSecretID(fmt.Sprintf("server-%s", envProfile))
+
+	if awsSecretManager != nil {
+		if err := awsSecretManager.CacheSecretValues(); err != nil {
+			log.Warn("Failed to retrieve information from Secrets Manager [msg: %s]", err.Error())
+		}
+	}
 }
 
 func secretDecryptNative(src string) string {
@@ -168,6 +179,10 @@ func secretEncryptB64(src string) string {
 }
 
 func secretDecryptAWS(src string) string {
-	log.Warn("not support aws secret manager")
-	return src
+	if awsSecretManager == nil {
+		log.Error("Secrets Manager is not configured")
+		return src
+	}
+
+	return awsSecretManager.GetSecretValue(src)
 }
