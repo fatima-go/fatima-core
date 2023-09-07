@@ -27,11 +27,11 @@ require (
   github.com/fatima-go/fatima-core v0.0.1-20230421093010-7c95ed894649
   ......
 )
-
 ```
 
 ### revision ###
 version     | desc
 ---------:| :----- 
-v1.0.0  |  Project Initial
+v1.0.0  |  project initial
+v1.1.0  | config 처리시 encrypt 기능 제공
 
