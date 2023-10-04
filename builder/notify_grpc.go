@@ -182,12 +182,12 @@ func (s *GrpcSystemNotifyHandler) enqueueForSending(bytes []byte) {
 	s.queue <- bytes
 }
 
-func (s *GrpcSystemNotifyHandler) SendAlarm(level monitor.AlarmLevel, message string) {
-	s.enqueueForSending(buildAlarmMessage(s.fatimaRuntime, level, message, ""))
+func (s *GrpcSystemNotifyHandler) SendAlarm(level monitor.AlarmLevel, action monitor.ActionType, message string) {
+	s.enqueueForSending(buildAlarmMessage(s.fatimaRuntime, level, action, message, ""))
 }
 
-func (s *GrpcSystemNotifyHandler) SendAlarmWithCategory(level monitor.AlarmLevel, message string, category string) {
-	s.enqueueForSending(buildAlarmMessage(s.fatimaRuntime, level, message, category))
+func (s *GrpcSystemNotifyHandler) SendAlarmWithCategory(level monitor.AlarmLevel, action monitor.ActionType, message string, category string) {
+	s.enqueueForSending(buildAlarmMessage(s.fatimaRuntime, level, action, message, category))
 }
 
 func (s *GrpcSystemNotifyHandler) SendEvent(message string, v ...interface{}) {
