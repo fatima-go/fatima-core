@@ -29,7 +29,6 @@ Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
 To https://github.com/fatima-go/fatima-core.git
  * [new tag]         v0.0.1-20231004081555-6f0f6cc31723 -> v0.0.1-20231004081555-6f0f6cc31723
 ```
-```
 
 # release #
 - [release history](./RELEASE.md)
