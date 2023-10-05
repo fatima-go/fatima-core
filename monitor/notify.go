@@ -24,6 +24,13 @@ import (
 	"fmt"
 )
 
+type SystemNotifyHandler interface {
+	SendAlarm(level AlarmLevel, action ActionType, message string)
+	SendAlarmWithCategory(level AlarmLevel, action ActionType, message string, category string)
+	SendActivity(json interface{})
+	SendEvent(message string, v ...interface{})
+}
+
 const (
 	NotifyAlarm = iota
 	NotifyEvent
@@ -61,9 +68,36 @@ func (al AlarmLevel) String() string {
 	return fmt.Sprintf("Unknown alarm level value : %d", al)
 }
 
-type SystemNotifyHandler interface {
-	SendAlarm(level AlarmLevel, message string)
-	SendAlarmWithCategory(level AlarmLevel, message string, category string)
-	SendActivity(json interface{})
-	SendEvent(message string, v ...interface{})
+const (
+	ActionUnknown         = 0
+	ActionProcessShutdown = 1
+	ActionProcessStartup  = 2
+)
+
+type ActionType uint8
+
+func (n ActionType) String() string {
+	switch n {
+	case ActionProcessShutdown:
+		return "PROCESS_SHUTDOWN"
+	case ActionProcessStartup:
+		return "PROCESS_STARTUP"
+	}
+	return fmt.Sprintf("Unknown action value : %d", n)
+}
+
+func (n ActionType) IsNil() bool {
+	switch n {
+	case ActionProcessShutdown, ActionProcessStartup:
+		return false
+	}
+	return true
+}
+
+func (n ActionType) IsProcessStartup() bool {
+	switch n {
+	case ActionProcessStartup:
+		return true
+	}
+	return false
 }

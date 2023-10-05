@@ -516,6 +516,15 @@ const (
 	deploymentJsonFile = "deployment.json"
 )
 
+var (
+	processDeployement Deployment
+)
+
+// GetProcessDeployment return process deployment information
+func GetProcessDeployment() Deployment {
+	return processDeployement
+}
+
 // displayDeploymentInfo print process build information to log
 func displayDeploymentInfo(env fatima.FatimaEnv) {
 	deploymentFile := filepath.Join(env.GetFolderGuide().GetAppFolder(), deploymentJsonFile)
@@ -525,20 +534,19 @@ func displayDeploymentInfo(env fatima.FatimaEnv) {
 		return
 	}
 
-	deployment := Deployment{}
-	err = json.Unmarshal(file, &deployment)
+	err = json.Unmarshal(file, &processDeployement)
 	if err != nil {
 		fmt.Printf("json unmarshal err : %s\n", err.Error())
 		return
 	}
 
-	if deployment.HasBuildInfo() {
-		if len(deployment.Build.BuildUser) > 0 {
-			log.Info("package build user : %s", deployment.Build.BuildUser)
+	if processDeployement.HasBuildInfo() {
+		if len(processDeployement.Build.BuildUser) > 0 {
+			log.Info("package build user : %s", processDeployement.Build.BuildUser)
 		}
-		log.Info("package build time : %s", deployment.Build.BuildTime)
-		if deployment.Build.HasGit() {
-			log.Info("package build (git) : %s", deployment.Build.Git)
+		log.Info("package build time : %s", processDeployement.Build.BuildTime)
+		if processDeployement.Build.HasGit() {
+			log.Info("package build (git) : %s", processDeployement.Build.Git)
 		}
 	}
 }
@@ -570,8 +578,9 @@ func (d DeploymentBuild) HasGit() bool {
 }
 
 type DeploymentBuildGit struct {
-	Branch string `json:"branch"`
-	Commit string `json:"commit"`
+	Branch  string `json:"branch"`
+	Commit  string `json:"commit"`
+	Message string `json:"message,omitempty"`
 }
 
 func (d DeploymentBuildGit) String() string {

@@ -127,7 +127,7 @@ func (i *DefaultProcessInteractor) Run() {
 	i.pprofService()
 	if i.runtimeProcess.GetBuilder().GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
 		message := fmt.Sprintf("%s process started", i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName())
-		i.runtimeProcess.GetSystemNotifyHandler().SendAlarm(monitor.AlarmLevelMinor, message)
+		i.runtimeProcess.GetSystemNotifyHandler().SendAlarm(monitor.AlarmLevelMinor, monitor.ActionProcessStartup, message)
 	}
 }
 
@@ -138,7 +138,7 @@ func (i *DefaultProcessInteractor) Stop() {
 func (i *DefaultProcessInteractor) Shutdown() {
 	if i.runtimeProcess.GetBuilder().GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
 		message := fmt.Sprintf("%s process shutdowned", i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName())
-		i.runtimeProcess.GetSystemNotifyHandler().SendAlarm(monitor.AlamLevelMajor, message)
+		i.runtimeProcess.GetSystemNotifyHandler().SendAlarm(monitor.AlamLevelMajor, monitor.ActionProcessShutdown, message)
 	}
 	lib.StopCron()
 	shutdownComponent(i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName())
