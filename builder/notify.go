@@ -34,9 +34,11 @@ const (
 	ApplicationCode = 0x1
 	LogicMeasure    = 10
 	LogicNotify     = 20
+	NotifyFrom      = "go-fatima"
+	NotifyInitiator = "go-fatima"
 )
 
-func buildAlarmMessage(fatimaRuntime fatima.FatimaRuntime, level monitor.AlarmLevel, message string, category string) []byte {
+func buildAlarmMessage(fatimaRuntime fatima.FatimaRuntime, level monitor.AlarmLevel, action monitor.ActionType, message string, category string) []byte {
 	m := make(map[string]interface{})
 	header := make(map[string]interface{})
 	body := make(map[string]interface{})
@@ -51,29 +53,34 @@ func buildAlarmMessage(fatimaRuntime fatima.FatimaRuntime, level monitor.AlarmLe
 	body["package_process"] = fatimaRuntime.GetEnv().GetSystemProc().GetProgramName()
 	body["event_time"] = lib.CurrentTimeMillis()
 
-	alarm := make(map[string]interface{})
-	//alarm["type"] = "ALARM"
+	content := make(map[string]interface{})
 	var notifyType monitor.NotifyType
 	notifyType = monitor.NotifyAlarm
-	alarm["type"] = notifyType.String()
-	alarm["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
-	alarm["alarm_level"] = level.String()
-	alarm["from"] = "go-fatima"
-	alarm["initiator"] = "go-fatima"
-	alarm["message"] = message
-
-	if len(category) > 0 {
-		alarm["category"] = category
+	content["type"] = notifyType.String() // type : notify level
+	if !action.IsNil() {
+		content["action"] = action.String() // action : kind of action
+	}
+	content["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
+	content["alarm_level"] = level.String()
+	content["from"] = NotifyFrom
+	content["initiator"] = NotifyInitiator
+	content["message"] = message
+	if action.IsProcessStartup() {
+		content["deployment"] = GetProcessDeployment()
 	}
 
-	body["message"] = alarm
+	if len(category) > 0 {
+		content["category"] = category
+	}
+
+	body["message"] = content
 
 	m["header"] = header
 	m["body"] = body
 
 	b, err := json.Marshal(m)
 	if err != nil {
-		log.Warn("fail to make alarm json : %s", err.Error())
+		log.Warn("fail to make content json : %s", err.Error())
 		return nil
 	}
 
@@ -95,15 +102,14 @@ func buildEventMessage(fatimaRuntime fatima.FatimaRuntime, message string, v ...
 	body["package_process"] = fatimaRuntime.GetEnv().GetSystemProc().GetProgramName()
 	body["event_time"] = lib.CurrentTimeMillis()
 
-	alarm := make(map[string]interface{})
-	//alarm["type"] = "EVENT"
+	content := make(map[string]interface{})
 	var notifyType monitor.NotifyType
 	notifyType = monitor.NotifyEvent
-	alarm["type"] = notifyType.String()
-	alarm["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
-	alarm["from"] = "go-fatima"
-	alarm["initiator"] = "go-fatima"
-	alarm["message"] = message
+	content["type"] = notifyType.String() // type : notify level
+	content["timestamp"] = time.Now().Format("2006-01-02 15:04:05")
+	content["from"] = NotifyFrom
+	content["initiator"] = NotifyInitiator
+	content["message"] = message
 
 	if len(v) > 0 {
 		args := make([]string, 0)
@@ -130,10 +136,10 @@ func buildEventMessage(fatimaRuntime fatima.FatimaRuntime, message string, v ...
 				args = append(args, ".")
 			}
 		}
-		alarm["params"] = args
+		content["params"] = args
 	}
 
-	body["message"] = alarm
+	body["message"] = content
 
 	m["header"] = header
 	m["body"] = body

@@ -7,31 +7,30 @@ fatima-core 의 개발과 테스트는 내가 변경한 fatima-core 코드에 �
 - [Go Big With Pseudo-Versions and GoCenter](https://jfrog.com/blog/go-big-with-pseudo-versions-and-gocenter/)
 - [Module version numbering](https://go.dev/doc/modules/version-numbers)
 
+먼저 (현재 개발중인) 소스의 태깅을 위해 현재 브랜치의 가장 최근 커밋 정보를 적절한 포맷으로 출력할 수 있도록 변수를 정의한다
+```shell
+TZ=UTC git --no-pager show \
+   --quiet \
+   --abbrev=12 \
+   --date='format-local:%Y%m%d%H%M%S' \
+   --format="%cd-%h"
+```
+다음으로 모듈의 pseudo 버저닝을 위해 적절한 버전과 커밋 정보를 조합하여 태깅하고 push를 한다.
 ```shell
 % TZ=UTC git --no-pager show \
    --quiet \
    --abbrev=12 \
    --date='format-local:%Y%m%d%H%M%S' \
    --format="%cd-%h"
-20230421093010-7c95ed894649
-% git tag v0.0.1-20230421093010-7c95ed894649
-% git push origin v0.0.1-20230421093010-7c95ed894649
+20231004081555-6f0f6cc31723
+% git tag v0.0.1-20231004081555-6f0f6cc31723
+% git push origin v0.0.1-20231004081555-6f0f6cc31723
 Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
-  ......
- * [new tag]         v0.0.1-20230421093010-7c95ed894649 -> v0.0.1-20230421093010-7c95ed894649
+To https://github.com/fatima-go/fatima-core.git
+ * [new tag]         v0.0.1-20231004081555-6f0f6cc31723 -> v0.0.1-20231004081555-6f0f6cc31723
+```
 ```
 
-테스트할 프로그램의 go.mod 파일에서 
-```shell 아래와 같은 식으로 pseudo version을 사용하도록 지정한다
-require (
-  github.com/fatima-go/fatima-core v0.0.1-20230421093010-7c95ed894649
-  ......
-)
-```
-
-### revision ###
-version     | desc
----------:| :----- 
-v1.0.0  |  project initial
-v1.1.0  | config 처리시 encrypt 기능 제공
+# release #
+- [release history](./RELEASE.md)
 
