@@ -38,19 +38,14 @@ const (
 	SecretSchemeAWS    = "aws"
 )
 
-// ResolveSecret scheme에 따라서 암호화를 진행하고 결과를 리턴한다
-func CreateSecret(schemeName string, src string) string {
-	switch schemeName {
-	case SecretSchemeB64:
-		return fmt.Sprintf("%s:%s", SecretSchemeB64, secretEncryptB64(src))
-	case SecretSchemeNative:
-		return fmt.Sprintf("%s:%s", SecretSchemeNative, secretEncryptNative(src))
-	case SecretSchemeAWS:
-		log.Warn("not supported %s", SecretSchemeAWS)
-		return src
-	}
+// CreateBase64 b64 스킴으로 암호화
+func CreateBase64(src string) string {
+	return fmt.Sprintf("%s:%s", SecretSchemeB64, secretEncryptB64(src))
+}
 
-	return src
+// CreateNative native 스킴으로 암호화
+func CreateNative(src string) string {
+	return fmt.Sprintf("%s:%s", SecretSchemeNative, secretEncryptNative(src))
 }
 
 // ResolveSecret resolve secret(with scheme) string
