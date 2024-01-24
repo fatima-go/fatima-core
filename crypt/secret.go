@@ -38,6 +38,21 @@ const (
 	SecretSchemeAWS    = "aws"
 )
 
+// ResolveSecret scheme에 따라서 암호화를 진행하고 결과를 리턴한다
+func CreateSecret(schemeName string, src string) string {
+	switch schemeName {
+	case SecretSchemeB64:
+		return fmt.Sprintf("%s:%s", SecretSchemeB64, secretEncryptB64(src))
+	case SecretSchemeNative:
+		return fmt.Sprintf("%s:%s", SecretSchemeNative, secretEncryptNative(src))
+	case SecretSchemeAWS:
+		log.Warn("not supported %s", SecretSchemeAWS)
+		return src
+	}
+
+	return src
+}
+
 // ResolveSecret resolve secret(with scheme) string
 func ResolveSecret(src string) string {
 	if len(src) == 0 {
