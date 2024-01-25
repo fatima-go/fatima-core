@@ -38,6 +38,16 @@ const (
 	SecretSchemeAWS    = "aws"
 )
 
+// CreateSecretBase64 b64 스킴으로 암호화
+func CreateSecretBase64(src string) string {
+	return fmt.Sprintf("%s:%s", SecretSchemeB64, secretEncryptB64(src))
+}
+
+// CreateSecretNative native 스킴으로 암호화
+func CreateSecretNative(src string) string {
+	return fmt.Sprintf("%s:%s", SecretSchemeNative, secretEncryptNative(src))
+}
+
 // ResolveSecret resolve secret(with scheme) string
 func ResolveSecret(src string) string {
 	if len(src) == 0 {

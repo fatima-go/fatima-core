@@ -55,6 +55,14 @@ func TestResolveSecret(t *testing.T) {
 	assert.EqualValues(t, sample, decoded)
 }
 
+func TestCreateAndResolveSecret(t *testing.T) {
+	log.Initialize(log.NewPreference(""))
+	cipherText := CreateSecretBase64(sample)
+	assert.EqualValues(t, sample, ResolveSecret(cipherText))
+	cipherText = CreateSecretNative(sample)
+	assert.EqualValues(t, sample, ResolveSecret(cipherText))
+}
+
 func TestSetSecretDecryptFunc(t *testing.T) {
 	log.Initialize(log.NewPreference(""))
 	_ = SetSecretDecryptFunc(SecretSchemeNative, exampleSecretDecryptNative)
