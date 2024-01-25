@@ -57,9 +57,9 @@ func TestResolveSecret(t *testing.T) {
 
 func TestCreateAndResolveSecret(t *testing.T) {
 	log.Initialize(log.NewPreference(""))
-	cipherText := CreateBase64(sample)
+	cipherText := CreateSecretBase64(sample)
 	assert.EqualValues(t, sample, ResolveSecret(cipherText))
-	cipherText = CreateNative(sample)
+	cipherText = CreateSecretNative(sample)
 	assert.EqualValues(t, sample, ResolveSecret(cipherText))
 }
 
