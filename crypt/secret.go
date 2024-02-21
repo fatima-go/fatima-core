@@ -112,7 +112,11 @@ func init() {
 	}
 	profile := []byte(strings.ToLower(envProfile))
 	cipherKeyByteFromProfile = make([]byte, CipherKeyBytesLength)
-	copy(cipherKeyByteFromProfile, profile[:CipherKeyBytesLength])
+	validLen := len(profile)
+	if validLen > CipherKeyBytesLength {
+		validLen = CipherKeyBytesLength
+	}
+	copy(cipherKeyByteFromProfile, profile[:validLen])
 	cipherIVKeyByteFromProfile = cipherKeyByteFromProfile[:CipherIVKeyLen]
 }
 
