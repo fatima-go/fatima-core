@@ -1,5 +1,8 @@
 # release #
 
+## v1.1.2 ##
+- [secret init() 함수에서 bouds out of range 에러 수정](https://github.com/fatima-go/fatima-core/issues/8)
+
 ## v1.1.1 ##
 - [외부에 encrypt 함수를 제공](https://github.com/fatima-go/fatima-core/issues/6)
 
