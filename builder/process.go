@@ -258,6 +258,7 @@ func (process *FatimaRuntimeProcess) IsRunning() bool {
 	return false
 }
 
+//goland:noinspection SpellCheckingInspection
 func (process *FatimaRuntimeProcess) Run() {
 	if process.status >= proc_status_running {
 		log.Warn("already process run")
@@ -267,13 +268,15 @@ func (process *FatimaRuntimeProcess) Run() {
 	process.status = proc_status_running
 
 	sigs := make(chan os.Signal, 1)
+	manualShutdown := false
 	go func() {
-		for true {
+		for {
 			sig := <-process.sigs
 
 			// SIGUSR1 : call goaway
 			if sig == syscall.SIGUSR1 {
 				process.interactor.Goaway()
+				manualShutdown = true
 				continue
 			}
 			process.status = proc_status_shutdown
@@ -288,7 +291,12 @@ func (process *FatimaRuntimeProcess) Run() {
 		return
 	}
 
-	process.interactor.Run()
+	actionCategory := getActionCategoryFromOsArgs()
+	if interactor, ok := process.interactor.(interface{ RunWithActionCategory(string) }); ok && len(actionCategory) > 0 {
+		interactor.RunWithActionCategory(actionCategory)
+	} else {
+		process.interactor.Run()
+	}
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -302,6 +310,12 @@ func (process *FatimaRuntimeProcess) Run() {
 	}()
 
 	<-sigs
+
+	if interactor, ok := process.interactor.(interface{ ShutdownManually() }); ok && manualShutdown {
+		interactor.ShutdownManually()
+		return
+	}
+
 	process.interactor.Shutdown()
 }
 
@@ -585,4 +599,17 @@ type DeploymentBuildGit struct {
 
 func (d DeploymentBuildGit) String() string {
 	return fmt.Sprintf("Branch=[%s], Commit=[%s]", d.Branch, d.Commit)
+}
+
+func getActionCategoryFromOsArgs() string {
+	for _, arg := range os.Args {
+		if strings.HasPrefix(arg, "actionCategory") {
+			valueSepIndex := strings.Index(arg, "=")
+			if valueSepIndex > 0 {
+				return arg[valueSepIndex+1:]
+			}
+		}
+	}
+
+	return ""
 }

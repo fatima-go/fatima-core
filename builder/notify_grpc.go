@@ -84,7 +84,7 @@ func (s *GrpcSystemNotifyHandler) consumeQueue() {
 		req := proto.SendFatimaMessageRequest{}
 		req.JsonString = string(notifyItem)
 
-		for true {
+		for {
 			if s.conn == nil {
 				s.connectSaturn()
 			}

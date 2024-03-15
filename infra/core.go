@@ -112,22 +112,22 @@ func (i *DefaultProcessInteractor) startListening() {
 	}
 }
 
-// RUN start process business activity
+// Run start process business activity
 func (i *DefaultProcessInteractor) Run() {
-	// start listening (Reader type FatimaComponent)
-	i.startListening()
+	i.run()
 
-	// start batche jobs
-	lib.StartCron()
-
-	// notify process bootup
-	bootupNotify()
-
-	// start pprof service if relative property exists
-	i.pprofService()
 	if i.runtimeProcess.GetBuilder().GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
 		message := fmt.Sprintf("%s process started", i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName())
 		i.runtimeProcess.GetSystemNotifyHandler().SendAlarm(monitor.AlarmLevelMinor, monitor.ActionProcessStartup, message)
+	}
+}
+
+func (i *DefaultProcessInteractor) RunWithActionCategory(actionCategory string) {
+	i.run()
+
+	if i.runtimeProcess.GetBuilder().GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
+		message := fmt.Sprintf("%s 프로세스가 [%s] 로 인해 시작됩니다.", i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName(), actionCategory)
+		i.runtimeProcess.GetSystemNotifyHandler().SendAlarmWithCategory(monitor.AlarmLevelMinor, monitor.ActionProcessStartup, message, actionCategory)
 	}
 }
 
@@ -139,6 +139,21 @@ func (i *DefaultProcessInteractor) Shutdown() {
 	if i.runtimeProcess.GetBuilder().GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
 		message := fmt.Sprintf("%s process shutdowned", i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName())
 		i.runtimeProcess.GetSystemNotifyHandler().SendAlarm(monitor.AlamLevelMajor, monitor.ActionProcessShutdown, message)
+	}
+	lib.StopCron()
+	shutdownComponent(i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName())
+}
+
+func (i *DefaultProcessInteractor) ShutdownManually() {
+	if i.runtimeProcess.GetBuilder().GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
+		message := fmt.Sprintf("%s 프로세스를 수동으로 종료 처리합니다.", i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName())
+		log.Debug("message: %s", message)
+		i.runtimeProcess.GetSystemNotifyHandler().SendAlarmWithCategory(
+			monitor.AlarmLevelMinor,
+			monitor.ActionProcessShutdown,
+			message,
+			"alarm_ignorable",
+		)
 	}
 	lib.StopCron()
 	shutdownComponent(i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName())
@@ -159,6 +174,20 @@ func (i *DefaultProcessInteractor) pprofService() {
 		}()
 		log.Info("starting pprof service. address=%s", addr)
 	}
+}
+
+func (i *DefaultProcessInteractor) run() {
+	// start listening (Reader type FatimaComponent)
+	i.startListening()
+
+	// start batche jobs
+	lib.StartCron()
+
+	// notify process bootup
+	bootupNotify()
+
+	// start pprof service if relative property exists
+	i.pprofService()
 }
 
 func startTickers() {
