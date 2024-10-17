@@ -42,6 +42,8 @@ type FatimaPkgProc interface {
 	GetGrep() string
 	GetLogLevel() log.LogLevel
 	GetStartMode() ProcessStartMode
+	GetWeight() int
+	GetStartSec() int
 }
 
 type FatimaPkgProcConfig interface {

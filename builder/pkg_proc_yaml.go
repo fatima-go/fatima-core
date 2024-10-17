@@ -39,6 +39,8 @@ type ProcessItem struct {
 	Path      string `yaml:"path,omitempty"`
 	Grep      string `yaml:"grep,omitempty"`
 	Startmode int    `yaml:"startmode,omitempty"`
+	Weight    int    `yaml:"weight,omitempty"`   // 프로세스 가동 weight. weight 값이 높은 프로세스들을 먼저 가동시킨다
+	StartSec  int    `yaml:"startsec,omitempty"` // 프로세스가 가동 후 온라인이 될때까지 충분히 보장되는 시간(초)
 }
 
 func (p ProcessItem) GetGid() int {
@@ -59,6 +61,14 @@ func (p ProcessItem) GetPath() string {
 
 func (p ProcessItem) GetGrep() string {
 	return p.Grep
+}
+
+func (p ProcessItem) GetWeight() int {
+	return p.Weight
+}
+
+func (p ProcessItem) GetStartSec() int {
+	return p.StartSec
 }
 
 func (p ProcessItem) GetStartMode() fatima.ProcessStartMode {
