@@ -1,5 +1,8 @@
 # release #
 
+## v1.1.4 ##
+- [init() 함수내에서 앱 폴더 체크 후 로직 추가](https://github.com/fatima-go/fatima-core/issues/16)
+
 ## v1.1.3 ##
 - [프로세스 설정에 신규 필드(weight, startsec) 추가 제공](https://github.com/fatima-go/fatima-core/issues/13) : fatima 프로세스 config item 에 weight 항목 추가
 
