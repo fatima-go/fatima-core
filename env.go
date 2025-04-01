@@ -41,6 +41,7 @@ type FolderGuide interface {
 	GetDataFolder() string
 	CreateTmpFolder() string
 	CreateTmpFilePath() string
+	IsAppExist() bool // whether app folder exists or not
 }
 
 type FatimaEnv interface {

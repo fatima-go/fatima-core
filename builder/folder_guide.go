@@ -76,6 +76,14 @@ func (this *FatimaFolderGuide) GetConfFolder() string {
 	return this.conf
 }
 
+func (this *FatimaFolderGuide) IsAppExist() bool {
+	// check app folder exists or not
+	if _, err := os.Stat(this.app); err == nil {
+		return true
+	}
+	return false
+}
+
 func (this *FatimaFolderGuide) GetDataFolder() string {
 	return this.data
 }
@@ -160,7 +168,10 @@ func newFolderGuide(proc fatima.SystemProc) fatima.FolderGuide {
 
 	folderGuide.resolveFolder(proc.GetProgramName())
 
-	os.Chdir(folderGuide.proc)
+	// check app folder exists or not
+	if folderGuide.IsAppExist() {
+		_ = os.Chdir(folderGuide.proc)
+	}
 
 	return folderGuide
 }
