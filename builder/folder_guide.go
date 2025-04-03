@@ -26,6 +26,7 @@ import (
 	"github.com/fatima-go/fatima-core/lib"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -40,6 +41,7 @@ const (
 	FatimaFolderStat     = "stat"
 	FatimaFolderProc     = "proc"
 	FatimaFileProcConfig = "fatima-package.yaml"
+	GoTestProgramSuffix  = ".test"
 )
 
 type FatimaFolderGuide struct {
@@ -74,6 +76,18 @@ func (this *FatimaFolderGuide) GetLogFolder() string {
 
 func (this *FatimaFolderGuide) GetConfFolder() string {
 	return this.conf
+}
+
+func (this *FatimaFolderGuide) IsAppExist() bool {
+	if strings.HasSuffix(this.app, GoTestProgramSuffix) {
+		return false
+	}
+
+	// check app folder exists or not
+	if _, err := os.Stat(this.app); err == nil {
+		return true
+	}
+	return false
 }
 
 func (this *FatimaFolderGuide) GetDataFolder() string {
@@ -141,7 +155,7 @@ func (this *FatimaFolderGuide) resolveFolder(programName string) {
 	checkDirectory(this.proc, true)
 
 	// remove/clear (previous) created process tmp dir
-	os.RemoveAll(filepath.Join(this.data, ".tmp"))
+	_ = os.RemoveAll(filepath.Join(this.data, ".tmp"))
 }
 
 func checkDirectory(path string, forceCreate bool) {
@@ -160,7 +174,10 @@ func newFolderGuide(proc fatima.SystemProc) fatima.FolderGuide {
 
 	folderGuide.resolveFolder(proc.GetProgramName())
 
-	os.Chdir(folderGuide.proc)
+	// check app folder exists or not
+	if folderGuide.IsAppExist() {
+		_ = os.Chdir(folderGuide.proc)
+	}
 
 	return folderGuide
 }

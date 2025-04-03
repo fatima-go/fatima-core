@@ -77,9 +77,13 @@ func init() {
 	fatimaProcess.env = newFatimaProcessEnv()
 
 	// fatima-log initialize
-	logPref := log.NewPreferenceWithProcName(fatimaProcess.env.GetFolderGuide().GetLogFolder(), fatimaProcess.env.GetSystemProc().GetProgramName())
-	logPref.DeliveryMode = log.DELIVERY_MODE_ASYNC
-	log.Initialize(logPref)
+	if fatimaProcess.env.GetFolderGuide().IsAppExist() {
+		logPref := log.NewPreferenceWithProcName(fatimaProcess.env.GetFolderGuide().GetLogFolder(), fatimaProcess.env.GetSystemProc().GetProgramName())
+		logPref.DeliveryMode = log.DELIVERY_MODE_ASYNC
+		log.Initialize(logPref)
+	} else {
+		log.Initialize(log.NewPreference(""))
+	}
 
 	// create platform support utility
 	fatimaProcess.platform = createPlatformSupport()
@@ -527,6 +531,10 @@ func GetProcessDeployment() Deployment {
 
 // displayDeploymentInfo print process build information to log
 func displayDeploymentInfo(env fatima.FatimaEnv) {
+	if !env.GetFolderGuide().IsAppExist() {
+		return
+	}
+
 	deploymentFile := filepath.Join(env.GetFolderGuide().GetAppFolder(), deploymentJsonFile)
 	file, err := os.ReadFile(deploymentFile)
 	if err != nil {
