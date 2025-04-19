@@ -1,5 +1,8 @@
 # release #
 
+## v1.1.5 ##
+- LICENSE.md 추가
+
 ## v1.1.4 ##
 - [init() 함수내에서 앱 폴더 체크 후 로직 추가](https://github.com/fatima-go/fatima-core/issues/16)
 
