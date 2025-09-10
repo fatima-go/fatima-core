@@ -23,12 +23,13 @@ package builder
 import (
 	"bytes"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-log"
-	"gopkg.in/yaml.v3"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-log"
+	"gopkg.in/yaml.v3"
 )
 
 type ProcessItem struct {

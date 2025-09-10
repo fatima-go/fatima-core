@@ -24,12 +24,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/fatima-go/fatima-log"
 	"os"
 	"reflect"
 	"runtime"
 	"syscall"
 	"unsafe"
+
+	"github.com/fatima-go/fatima-log"
 )
 
 var (

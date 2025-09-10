@@ -23,11 +23,12 @@ package infra
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
+	"sync"
+
 	"github.com/fatima-go/fatima-core"
 	"github.com/fatima-go/fatima-core/lib"
 	"github.com/fatima-go/fatima-log"
-	"runtime/debug"
-	"sync"
 )
 
 var compPreInit []fatima.FatimaComponent

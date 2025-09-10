@@ -22,13 +22,14 @@ package builder
 
 import (
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/crypt"
-	"github.com/fatima-go/fatima-log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/crypt"
+	"github.com/fatima-go/fatima-log"
 )
 
 type PropertyConfigReader struct {

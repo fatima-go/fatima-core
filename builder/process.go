@@ -24,10 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/builder/platform"
-	"github.com/fatima-go/fatima-core/monitor"
-	"github.com/fatima-go/fatima-log"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -35,14 +31,20 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/builder/platform"
+	"github.com/fatima-go/fatima-core/ipc"
+	"github.com/fatima-go/fatima-core/monitor"
+	"github.com/fatima-go/fatima-log"
 )
 
 const (
-	proc_status_created = 1 << iota
-	proc_status_initializing
-	proc_status_ready
-	proc_status_running
-	proc_status_shutdown
+	procStatusCreated = 1 << iota
+	procStatusInitializing
+	procStatusReady
+	procStatusRunning
+	procStatusShutdown
 )
 
 const (
@@ -71,7 +73,7 @@ func init() {
 	fatimaProcess.sigs = make(chan os.Signal, 1)
 	signal.Notify(fatimaProcess.sigs, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM, syscall.SIGUSR1)
 
-	fatimaProcess.status = proc_status_created
+	fatimaProcess.status = procStatusCreated
 
 	// load fatima process environment information
 	fatimaProcess.env = newFatimaProcessEnv()
@@ -217,15 +219,15 @@ func (process *FatimaRuntimeProcess) GetConfig() fatima.Config {
 func (process *FatimaRuntimeProcess) GetPackaging() fatima.Packaging {
 	if process.packaging == nil {
 		pack := FatimaPackaging{name: "default", host: "unknown", group: "basic"}
-		v, ok := process.builder.GetPredefines().GetDefine(GLOBAL_DEFINE_PACKAGE_GROUPNAME)
+		v, ok := process.builder.GetPredefines().GetDefine(GlobalDefinePackageGroupname)
 		if ok {
 			pack.group = v
 		}
-		v, ok = process.builder.GetPredefines().GetDefine(GLOBAL_DEFINE_PACKAGE_NAME)
+		v, ok = process.builder.GetPredefines().GetDefine(GlobalDefinePackageName)
 		if ok {
 			pack.name = v
 		}
-		v, ok = process.builder.GetPredefines().GetDefine(GLOBAL_DEFINE_PACKAGE_HOSTNAME)
+		v, ok = process.builder.GetPredefines().GetDefine(GlobalDefinePackageHostname)
 		if ok {
 			pack.host = v
 		} else {
@@ -255,7 +257,7 @@ func (process *FatimaRuntimeProcess) GetBuilder() FatimaRuntimeBuilder {
 }
 
 func (process *FatimaRuntimeProcess) IsRunning() bool {
-	if process.status == proc_status_running || process.status == proc_status_ready {
+	if process.status == procStatusRunning || process.status == procStatusReady {
 		return true
 	}
 
@@ -263,12 +265,12 @@ func (process *FatimaRuntimeProcess) IsRunning() bool {
 }
 
 func (process *FatimaRuntimeProcess) Run() {
-	if process.status >= proc_status_running {
+	if process.status >= procStatusRunning {
 		log.Warn("already process run")
 		return
 	}
 
-	process.status = proc_status_running
+	process.status = procStatusRunning
 
 	sigs := make(chan os.Signal, 1)
 	go func() {
@@ -280,7 +282,7 @@ func (process *FatimaRuntimeProcess) Run() {
 				process.interactor.Goaway()
 				continue
 			}
-			process.status = proc_status_shutdown
+			process.status = procStatusShutdown
 			sigs <- sig
 			break
 		}
@@ -292,20 +294,30 @@ func (process *FatimaRuntimeProcess) Run() {
 		return
 	}
 
+	// process ipc start
+	if process.builder.GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
+		ipc.StartIPCListen(process)
+	}
 	process.interactor.Run()
 
 	defer func() {
 		if r := recover(); r != nil {
 			log.Error("**PANIC** while running", errors.New(fmt.Sprintf("%s", r)))
 			log.Error("%s", string(debug.Stack()))
-			process.status = proc_status_shutdown
+			process.status = procStatusShutdown
 			process.interactor.Shutdown()
-			log.Close()
+			_ = log.Close()
 			return
 		}
 	}()
 
 	<-sigs
+
+	// process ipc stop
+	if process.builder.GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
+		ipc.StopIPCListen()
+	}
+
 	process.interactor.Shutdown()
 }
 
@@ -340,11 +352,11 @@ func (process *FatimaRuntimeProcess) RegistMeasureUnit(unit monitor.SystemMeasur
 
 // Initialize : initialize process
 func (process *FatimaRuntimeProcess) Initialize(builder FatimaRuntimeBuilder) {
-	if process.status >= proc_status_initializing {
+	if process.status >= procStatusInitializing {
 		return
 	}
 
-	process.status = proc_status_initializing
+	process.status = procStatusInitializing
 	process.builder = builder
 
 	// load process information from package : fatima-package.yaml
@@ -362,7 +374,7 @@ func (process *FatimaRuntimeProcess) Initialize(builder FatimaRuntimeBuilder) {
 
 	// initialize process 'proc' folder
 	process.parepareProcFolder(pkgProc, builder.GetProcessType())
-	process.status = proc_status_ready
+	process.status = procStatusReady
 }
 
 // buildLogging build logger decoration
@@ -484,7 +496,7 @@ func (process *FatimaRuntimeProcess) parepareProcFolder(proc fatima.FatimaPkgPro
 		check(err)
 
 		var redirectConsole bool
-		redirectConsole, err = process.GetConfig().GetBool(GOFATIMA_REDIRECT_CONSOLE)
+		redirectConsole, err = process.GetConfig().GetBool(GofatimaRedirectConsole)
 		if err != nil {
 			redirectConsole = true // default
 		}

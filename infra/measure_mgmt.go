@@ -21,9 +21,10 @@
 package infra
 
 import (
+	"time"
+
 	"github.com/fatima-go/fatima-core/builder"
 	"github.com/fatima-go/fatima-core/monitor"
-	"time"
 )
 
 // newSystemMeasureManagement process measure. e.g) Heap size, gc cycle count, ....

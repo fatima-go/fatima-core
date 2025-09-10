@@ -22,13 +22,14 @@ package infra
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/fatima-go/fatima-core"
 	"github.com/fatima-go/fatima-core/builder"
 	"github.com/fatima-go/fatima-core/lib"
 	"github.com/fatima-go/fatima-core/monitor"
 	"github.com/fatima-go/fatima-log"
-	"net/http"
-	"time"
 )
 
 type ProcessCoreWorker interface {
@@ -149,7 +150,7 @@ func (i *DefaultProcessInteractor) RegistMeasureUnit(unit monitor.SystemMeasurab
 }
 
 func (i *DefaultProcessInteractor) pprofService() {
-	addr, ok := i.runtimeProcess.GetConfig().GetValue(builder.GOFATIMA_PROP_PPROF_ADDRESS)
+	addr, ok := i.runtimeProcess.GetConfig().GetValue(builder.GofatimaPropPprofAddress)
 	if ok {
 		go func() {
 			err := http.ListenAndServe(addr, http.DefaultServeMux)

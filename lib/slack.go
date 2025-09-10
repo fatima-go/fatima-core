@@ -23,13 +23,14 @@ package lib
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-log"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-log"
 )
 
 const (

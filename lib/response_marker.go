@@ -23,8 +23,9 @@ package lib
 import (
 	"bytes"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
 	"sync"
+
+	"github.com/fatima-go/fatima-core"
 )
 
 type ResponseMarker interface {

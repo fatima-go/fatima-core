@@ -28,12 +28,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
 	"os/user"
 	"strconv"
 	"strings"
 	"syscall"
 	"unsafe"
+
+	"github.com/fatima-go/fatima-core"
 )
 
 type OSPlatform struct {

@@ -23,14 +23,15 @@ package infra
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/monitor"
-	"github.com/fatima-go/fatima-log"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/monitor"
+	"github.com/fatima-go/fatima-log"
 )
 
 type logLevelItem struct {

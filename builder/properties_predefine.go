@@ -22,13 +22,14 @@ package builder
 
 import (
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/crypt"
 	"net"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/crypt"
 )
 
 type buildtinVariable string
@@ -40,9 +41,9 @@ type variableValue struct {
 
 func (this variableValue) getValue() string {
 	switch this.key {
-	case BUILTIN_VARIABLE_YYYYMM:
+	case BuiltinVariableYyyymm:
 		return time.Now().Format("200601")
-	case BUILTIN_VARIABLE_YYYYMMDD:
+	case BuiltinVariableYyyymmdd:
 		return time.Now().Format("20060102")
 	}
 	return this.value
@@ -85,13 +86,13 @@ func (reader *PropertyPredefineReader) GetDefine(key string) (string, bool) {
 func (reader *PropertyPredefineReader) buildBuiltin() {
 	reader.builtinVariables = make([]variableValue, 0)
 
-	reader.appendBuiltinVar(variableValue{BUILTIN_VARIABLE_HOME, reader.env.GetSystemProc().GetHomeDir()})
-	reader.appendBuiltinVar(variableValue{BUILTIN_VARIABLE_FATIMA_HOME, reader.env.GetFolderGuide().GetFatimaHome()})
-	reader.appendBuiltinVar(variableValue{BUILTIN_VARIABLE_LOCAL_IPADDRESS, getDefaultIpAddress()})
-	reader.appendBuiltinVar(variableValue{BUILTIN_VARIABLE_YYYYMM, ""})
-	reader.appendBuiltinVar(variableValue{BUILTIN_VARIABLE_YYYYMMDD, ""})
-	reader.appendBuiltinVar(variableValue{BUILTIN_VARIABLE_APP_NAME, reader.env.GetSystemProc().GetProgramName()})
-	reader.appendBuiltinVar(variableValue{BUILTIN_VARIABLE_APP_FOLDER_DATA, reader.env.GetFolderGuide().GetDataFolder()})
+	reader.appendBuiltinVar(variableValue{BuiltinVariableHome, reader.env.GetSystemProc().GetHomeDir()})
+	reader.appendBuiltinVar(variableValue{BuiltinVariableFatimaHome, reader.env.GetFolderGuide().GetFatimaHome()})
+	reader.appendBuiltinVar(variableValue{BuiltinVariableLocalIpaddress, getDefaultIpAddress()})
+	reader.appendBuiltinVar(variableValue{BuiltinVariableYyyymm, ""})
+	reader.appendBuiltinVar(variableValue{BuiltinVariableYyyymmdd, ""})
+	reader.appendBuiltinVar(variableValue{BuiltinVariableAppName, reader.env.GetSystemProc().GetProgramName()})
+	reader.appendBuiltinVar(variableValue{BuiltinVariableAppFolderData, reader.env.GetFolderGuide().GetDataFolder()})
 }
 
 // prepareMatchers serving fatima global configuration properties as variable

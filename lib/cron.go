@@ -47,9 +47,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-log"
-	robfig_cron "github.com/robfig/cron"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -57,6 +54,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-log"
+	robfig_cron "github.com/robfig/cron"
 )
 
 const (
