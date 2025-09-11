@@ -24,6 +24,7 @@
 package platform
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"errors"
@@ -35,6 +36,8 @@ import (
 	"unsafe"
 
 	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/lib"
+	log "github.com/fatima-go/fatima-log"
 )
 
 type OSPlatform struct {
@@ -58,6 +61,31 @@ func (t *OSPlatform) EnsureSingleInstance(proc fatima.SystemProc) error {
 	}
 
 	return nil
+}
+
+func (t *OSPlatform) CheckProcessRunningByPid(procName string, pid int) bool {
+	command := fmt.Sprintf("ps -ef | grep %d | grep -v grep | awk '{print $2}'", pid)
+	out, err := lib.ExecuteShell(command)
+	if err != nil {
+		log.Warn("fail to execute command : %s", err.Error())
+		return false
+	}
+
+	trimmed := strings.Trim(out, "\r\n\t ")
+	found := false
+	scanner := bufio.NewScanner(strings.NewReader(trimmed))
+	for scanner.Scan() {
+		foundPid, err := strconv.Atoi(scanner.Text())
+		if err != nil {
+			continue
+		}
+		if foundPid == pid {
+			found = true
+			break
+		}
+	}
+
+	return found
 }
 
 func (t *OSPlatform) GetProcesses() ([]fatima.Process, error) {

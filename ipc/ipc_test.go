@@ -38,13 +38,9 @@ const (
 
 func init() {
 	log.Initialize(log.NewPreference(""))
-	envProvideHelper.getPid = mockGetPid
-	envProvideHelper.getSockDir = mockGetSockDir
-	envProvideHelper.buildAddress = mockBuildAddress
-	envProvideHelper.getProgramName = mockGetprogramName
 }
 
-func mockGetprogramName() string {
+func mockGetProgramName() string {
 	return testProgramName
 }
 
@@ -66,13 +62,22 @@ func mockBuildAddress() string {
 	)
 }
 
+func beforeTestEnv() {
+	envProvideHelper.getPid = mockGetPid
+	envProvideHelper.getSockDir = mockGetSockDir
+	envProvideHelper.buildAddress = mockBuildAddress
+	envProvideHelper.getProgramName = mockGetProgramName
+}
+
 func TestEnv(t *testing.T) {
+	beforeTestEnv()
+
 	assert.EqualValues(t, "/tmp", envProvideHelper.getSockDir())
 
 	listener := &TestSessionListener{}
 	RegisterIPCSessionListener(listener)
 
-	StartIPCListen(nil)
+	startIPCServer()
 
 	// prepare client
 	clientSession, err := newFatimaIPCClientSession(testProgramName)
@@ -102,7 +107,7 @@ func TestEnv(t *testing.T) {
 	}
 	time.Sleep(time.Second)
 	clientSession.Disconnect()
-	StopIPCListen()
+	stopIPCServer()
 
 	assert.True(t, listener.sessionStarted)
 	assert.True(t, listener.receiveCommand)
@@ -136,7 +141,7 @@ func (t *TestSessionListener) OnReceiveCommand(ctx SessionContext, message Messa
 		}
 		err := ctx.SendCommand(NewMessageTransactionVerify(t.transaction))
 		if err != nil {
-			log.Warn("fail to send goaway : %s", err.Error())
+			log.Warn("fail to send transaction verify : %s", err.Error())
 		}
 		log.Debug("[%s] sent transaction verify : %s", ctx, t.transaction)
 		return
@@ -152,15 +157,3 @@ func (t *TestSessionListener) OnClose(ctx SessionContext) {
 	log.Info("OnClose : %s", ctx)
 	t.closeCalled = true
 }
-
-/*
-
-type FatimaIPCSessionListener interface {
-	StartSession(ctx SessionContext)
-	SendCommand(ctx SessionContext, message Message)
-	OnReceiveCommand(ctx SessionContext, message Message)
-	OnClose(ctx SessionContext)
-	Disconnect(ctx SessionContext)
-}
-
-*/

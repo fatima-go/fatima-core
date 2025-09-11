@@ -40,6 +40,8 @@ type Process interface {
 type PlatformSupport interface {
 	// EnsureSingleInstance ensure (only 1) single process running
 	EnsureSingleInstance(proc SystemProc) error
+	// check process is running or not
+	CheckProcessRunningByPid(procName string, pid int) bool
 	// GetProcesses load all process list
 	GetProcesses() ([]Process, error)
 	// Dup3 duplicate fd

@@ -26,7 +26,38 @@ import (
 	"io/fs"
 	"os"
 	"sync"
+
+	"github.com/fatima-go/fatima-core"
+	log "github.com/fatima-go/fatima-log"
 )
+
+var facilitiesSetOnce sync.Once
+
+func StartIPCService(fr fatima.FatimaRuntime, ps fatima.PlatformSupport, goawayImpl fatima.FatimaRuntimeGoaway) {
+	facilitiesSetOnce.Do(func() {
+		setFacilities(fr, ps, goawayImpl)
+	})
+
+	// register goaway session listener
+	registerGoAwaySessionListener()
+
+	// start server
+	startIPCServer()
+}
+
+func setFacilities(fr fatima.FatimaRuntime, ps fatima.PlatformSupport, goawayImpl fatima.FatimaRuntimeGoaway) {
+	fatimaRuntime = fr
+	platformSupporter = ps
+	goawayRunner = goawayImpl
+}
+
+func StopIPCService() {
+	stopIPCServer()
+}
+
+var fatimaRuntime fatima.FatimaRuntime
+var platformSupporter fatima.PlatformSupport
+var goawayRunner fatima.FatimaRuntimeGoaway
 
 var ipcSessionListeners = make([]FatimaIPCSessionListener, 0)
 var ipcSessionListenerLock sync.Mutex
@@ -59,8 +90,10 @@ func IsSupportFatimaIPC(proc string) bool {
 		return false
 	}
 
-	// TODO : (linux) /proc/1234 폴더 체크 필요..
-	// CheckProcessRunningByPid(...)
+	if !checkProcessRunning(proc, pid) {
+		log.Warn("process %s [%d] is not running", proc, pid)
+		return false
+	}
 
 	sockDir := fmt.Sprintf("%s/app/%s/data",
 		fatimaRuntime.GetEnv().GetFolderGuide().GetFatimaHome(),
@@ -72,4 +105,11 @@ func IsSupportFatimaIPC(proc string) bool {
 		return false
 	}
 	return stat.Mode()&fs.ModeSocket != 0
+}
+
+func checkProcessRunning(proc string, pid int) bool {
+	if platformSupporter == nil {
+		return true
+	}
+	return platformSupporter.CheckProcessRunningByPid(proc, pid)
 }

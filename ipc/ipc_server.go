@@ -31,7 +31,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/fatima-go/fatima-core"
 	log "github.com/fatima-go/fatima-log"
 )
 
@@ -43,11 +42,7 @@ const (
 
 var ipcServerSocket net.Listener
 
-func StartIPCListen(fr fatima.FatimaRuntime) {
-	if fatimaRuntime != nil {
-		fatimaRuntime = fr
-	}
-
+func startIPCServer() {
 	if ipcServerSocket != nil {
 		return
 	}
@@ -113,7 +108,7 @@ func startSession(ctx SessionContext) {
 	propagateOnClose(ctx)
 }
 
-func StopIPCListen() {
+func stopIPCServer() {
 	log.Debug("stop ipc listen")
 	if ipcServerSocket != nil {
 		_ = ipcServerSocket.Close()

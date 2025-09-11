@@ -27,9 +27,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"sync/atomic"
 
-	"github.com/fatima-go/fatima-core/lib"
 	log "github.com/fatima-go/fatima-log"
 )
 
@@ -54,6 +52,8 @@ const (
 	CommandGoaway                = "GOAWAY"
 	CommandTransactionVerify     = "TRANSACTION_VERIFY"
 	CommandTransactionVerifyDone = "TRANSACTION_VERIFY_DONE"
+	CommandGoawayStart           = "GOAWAY_START"
+	CommandGoawayDone            = "GOAWAY_DONE"
 	DataKeyTransaction           = "transaction"
 	DataKeyVerify                = "verify"
 )
@@ -72,15 +72,27 @@ func NewMessageGoaway() Message {
 	return m
 }
 
-func NewMessageTransactionVerify(transaction string) Message {
-	m := newMessage(CommandTransactionVerify)
-	m.Data = JsonBody{DataKeyTransaction: transaction}
+func NewMessageGoawayStart(transactionId string) Message {
+	m := newMessage(CommandGoawayStart)
+	m.Data = JsonBody{DataKeyTransaction: generateTransactionId()}
 	return m
 }
 
-func NewMessageTransactionVerifyDone(transaction string, result bool) Message {
+func NewMessageGoawayDone(transactionId string) Message {
+	m := newMessage(CommandGoawayDone)
+	m.Data = JsonBody{DataKeyTransaction: generateTransactionId()}
+	return m
+}
+
+func NewMessageTransactionVerify(transactionId string) Message {
+	m := newMessage(CommandTransactionVerify)
+	m.Data = JsonBody{DataKeyTransaction: transactionId}
+	return m
+}
+
+func NewMessageTransactionVerifyDone(transactionId string, result bool) Message {
 	m := newMessage(CommandTransactionVerifyDone)
-	m.Data = JsonBody{DataKeyTransaction: transaction, DataKeyVerify: result}
+	m.Data = JsonBody{DataKeyTransaction: transactionId, DataKeyVerify: result}
 	return m
 }
 
@@ -116,15 +128,6 @@ func parseMessage(d []byte) (Message, error) {
 
 	return message, nil
 }
-
-func generateTransactionId() string {
-	counter := atomic.AddInt64(&transactionCounter, 1)
-	return fmt.Sprintf("%s%02d",
-		lib.RandomAlphanumeric(8),
-		counter%100)
-}
-
-var transactionCounter int64
 
 type JsonBody map[string]interface{}
 
@@ -207,4 +210,29 @@ func AsString(src interface{}) string {
 		return strconv.FormatBool(rv.Bool())
 	}
 	return fmt.Sprintf("%v", src)
+}
+
+func AsBool(src interface{}) bool {
+	if src == nil {
+		return false
+	}
+
+	switch v := src.(type) {
+	case string:
+		return toBool(v)
+	case []byte:
+
+		return toBool(string(v))
+	}
+	rv := reflect.ValueOf(src)
+	switch rv.Kind() {
+	case reflect.Bool:
+		return rv.Bool()
+	}
+	return false
+}
+
+func toBool(s string) bool {
+	s = strings.ToLower(s)
+	return s == "true" || s == "1" || s == "yes" || s == "y" || s == "t"
 }

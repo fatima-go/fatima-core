@@ -296,7 +296,7 @@ func (process *FatimaRuntimeProcess) Run() {
 
 	// process ipc start
 	if process.builder.GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
-		ipc.StartIPCListen(process)
+		ipc.StartIPCService(process, process.platform, process.interactor)
 	}
 	process.interactor.Run()
 
@@ -315,7 +315,7 @@ func (process *FatimaRuntimeProcess) Run() {
 
 	// process ipc stop
 	if process.builder.GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
-		ipc.StopIPCListen()
+		ipc.StopIPCService()
 	}
 
 	process.interactor.Shutdown()

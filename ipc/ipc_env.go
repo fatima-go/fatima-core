@@ -27,8 +27,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"github.com/fatima-go/fatima-core"
 )
 
 type provideFunc func() string
@@ -42,8 +40,6 @@ type envProvider struct {
 }
 
 var envProvideHelper = envProvider{}
-
-var fatimaRuntime fatima.FatimaRuntime
 
 func init() {
 	envProvideHelper.getPid = getPid

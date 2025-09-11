@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"sync"
 	"sync/atomic"
 )
 
@@ -35,13 +36,13 @@ const (
 
 type SessionType uint8
 
-var transactionId int64
+var ipcTransactionId int64
 
 func newSessionContext(conn net.Conn) SessionContext {
 	return &defaultSessionContext{
 		sessionType:   sessionTypeServer,
 		conn:          conn,
-		transactionId: atomic.AddInt64(&transactionId, 1),
+		transactionId: atomic.AddInt64(&ipcTransactionId, 1),
 	}
 }
 
@@ -56,6 +57,7 @@ type defaultSessionContext struct {
 	sessionType   SessionType
 	conn          net.Conn
 	transactionId int64
+	connLock      sync.Mutex
 }
 
 func (s *defaultSessionContext) GetConnection() net.Conn {
@@ -75,18 +77,22 @@ func (s *defaultSessionContext) SendCommand(message Message) error {
 		return fmt.Errorf("failed to marshal JSON: %s", err.Error())
 	}
 
-	if s.conn == nil {
-		return fmt.Errorf("connection is not available")
-	}
-
 	payload := make([]byte, len(data)+1)
 	copy(payload, data)
 	payload[len(data)] = '\n'
+
+	s.connLock.Lock()
+	defer s.connLock.Unlock()
+	if s.conn == nil {
+		return fmt.Errorf("connection is not available")
+	}
 	_, err = s.conn.Write(payload)
 	return err
 }
 
 func (s *defaultSessionContext) Close() {
+	s.connLock.Lock()
+	defer s.connLock.Unlock()
 	if s.conn != nil {
 		_ = s.conn.Close()
 		s.conn = nil
