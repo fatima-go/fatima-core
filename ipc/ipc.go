@@ -94,7 +94,7 @@ type FatimaIPCClientSession interface {
 	Disconnect()
 }
 
-func IsSupportFatimaIPC(proc string) bool {
+func IsFatimaIPCAvailable(proc string) bool {
 	if fatimaRuntime == nil {
 		return false
 	}

@@ -35,15 +35,7 @@ import (
 	log "github.com/fatima-go/fatima-log"
 )
 
-func newClientSessionContext(conn net.Conn) SessionContext {
-	return &defaultSessionContext{
-		sessionType:   sessionTypeClient,
-		conn:          conn,
-		transactionId: time.Now().UnixMilli(),
-	}
-}
-
-func newFatimaIPCClientSession(proc string) (FatimaIPCClientSession, error) {
+func NewFatimaIPCClientSession(proc string) (FatimaIPCClientSession, error) {
 	address, err := buildClientAddress(proc)
 	if err != nil {
 		return nil, fmt.Errorf("fail to build client address : %s", err.Error())
@@ -61,6 +53,14 @@ func newFatimaIPCClientSession(proc string) (FatimaIPCClientSession, error) {
 	log.Debug("[%s] connection established. start reading", clientSession.ctx)
 	go clientSession.startRead() // start read goroutine
 	return clientSession, nil
+}
+
+func newClientSessionContext(conn net.Conn) SessionContext {
+	return &defaultSessionContext{
+		sessionType:   sessionTypeClient,
+		conn:          conn,
+		transactionId: time.Now().UnixMilli(),
+	}
 }
 
 type defaultClientSession struct {

@@ -89,7 +89,7 @@ func (g *GoAwaySessionListener) OnReceiveCommand(ctx SessionContext, message Mes
 func (g *GoAwaySessionListener) validateTransaction(ctx SessionContext, transactionId string) error {
 	// STEP 1: ask transaction is valid to juno
 	// prepare junoClient
-	junoClient, err := newFatimaIPCClientSession(junoProgramName)
+	junoClient, err := NewFatimaIPCClientSession(junoProgramName)
 	if err != nil {
 		return fmt.Errorf("cannot make connection to %s : %s", junoProgramName, err.Error())
 	}

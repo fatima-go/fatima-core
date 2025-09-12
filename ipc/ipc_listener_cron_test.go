@@ -107,7 +107,7 @@ func TestCronExecuteWithArgs(t *testing.T) {
 }
 
 func sendCronTestMessage(jobName, sample string) error {
-	junoClient, err := newFatimaIPCClientSession(junoProgramName)
+	junoClient, err := NewFatimaIPCClientSession(junoProgramName)
 	if err != nil {
 		return fmt.Errorf("cannot make connection to %s : %s", junoProgramName, err.Error())
 	}

@@ -80,7 +80,7 @@ func TestEnv(t *testing.T) {
 	startIPCServer()
 
 	// prepare client
-	clientSession, err := newFatimaIPCClientSession(testProgramName)
+	clientSession, err := NewFatimaIPCClientSession(testProgramName)
 	if !assert.Nil(t, err) {
 		t.Fatalf("fail to create client session : %s", err.Error())
 	}
