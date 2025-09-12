@@ -155,7 +155,10 @@ func sendEventToSlack(url string, b []byte, message string) {
 		return
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		log.Debug("successfully send to slack : %s", message)
 	} else {

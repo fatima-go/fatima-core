@@ -217,8 +217,9 @@ func AsString(src interface{}) string {
 		return strconv.FormatFloat(rv.Float(), 'g', -1, 32)
 	case reflect.Bool:
 		return strconv.FormatBool(rv.Bool())
+	default:
+		return fmt.Sprintf("%v", src)
 	}
-	return fmt.Sprintf("%v", src)
 }
 
 func AsBool(src interface{}) bool {
@@ -237,8 +238,9 @@ func AsBool(src interface{}) bool {
 	switch rv.Kind() {
 	case reflect.Bool:
 		return rv.Bool()
+	default:
+		return false
 	}
-	return false
 }
 
 func toBool(s string) bool {

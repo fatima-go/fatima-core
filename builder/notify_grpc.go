@@ -116,7 +116,7 @@ func (s *GrpcSystemNotifyHandler) sendToSaturn(req proto.SendFatimaMessageReques
 		log.Warn("SendFatimaMessage grpc exception : %s", err.Error())
 
 		// maybe grpc relative errors...
-		s.conn.Close()
+		_ = s.conn.Close()
 		s.conn = nil
 		return false
 	}
@@ -131,14 +131,9 @@ func (s *GrpcSystemNotifyHandler) sendToSaturn(req proto.SendFatimaMessageReques
 func (s *GrpcSystemNotifyHandler) connectSaturn() {
 	log.Warn("connecting to saturn %s", s.saturnAddress)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	gConn, err := grpc.DialContext(
-		ctx,
-		s.saturnAddress,
-		grpc.WithBlock(),
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+	gConn, err := grpc.NewClient(s.saturnAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 
 	if err != nil {
 		log.Warn("fail to connect saturn : %s", err.Error())

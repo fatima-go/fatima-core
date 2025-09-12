@@ -42,6 +42,10 @@ const (
 
 var ipcServerSocket net.Listener
 
+func isServerRunning() bool {
+	return ipcServerSocket != nil
+}
+
 func startIPCServer() {
 	if ipcServerSocket != nil {
 		return

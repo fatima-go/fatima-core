@@ -336,7 +336,7 @@ func newCronJob(config fatima.Config, name string, runnable func(string, fatima.
 
 func clearRerunFile() {
 	file := filepath.Join(fatimaRuntime.GetEnv().GetFolderGuide().GetDataFolder(), fileRerun)
-	os.Remove(file)
+	_ = os.Remove(file)
 }
 
 func startRerunFileScanner() {

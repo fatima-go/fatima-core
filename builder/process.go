@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -95,7 +96,7 @@ func init() {
 	err := fatimaProcess.platform.EnsureSingleInstance(fatimaProcess.env.GetSystemProc())
 	if err != nil {
 		// process already running
-		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		os.Exit(0)
 	}
 
@@ -103,7 +104,7 @@ func init() {
 	// fatima process send any event/alarm to saturn via grpc
 	fatimaProcess.notifyHandler, err = NewGrpcSystemNotifyHandler(fatimaProcess)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		os.Exit(0)
 	}
 
@@ -291,14 +292,17 @@ func (process *FatimaRuntimeProcess) Run() {
 
 	if !process.interactor.Initialize() {
 		log.Warn("fail to initialize process. shutdown %s", process.env.GetSystemProc().GetProgramName())
-		log.Close()
+		_ = log.Close()
 		return
 	}
 
 	// process ipc start
+	var ipcServiceCloser io.Closer
 	if process.builder.GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
-		ipc.StartIPCService(process, process.platform, process.interactor, lib.Rerun)
+		ipcServiceCloser = ipc.StartIPCService(process, process.platform, process.interactor, lib.Rerun)
 	}
+
+	// run process interactor
 	process.interactor.Run()
 
 	defer func() {
@@ -315,8 +319,8 @@ func (process *FatimaRuntimeProcess) Run() {
 	<-sigs
 
 	// process ipc stop
-	if process.builder.GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
-		ipc.StopIPCService()
+	if ipcServiceCloser != nil {
+		_ = ipcServiceCloser.Close()
 	}
 
 	process.interactor.Shutdown()
@@ -324,7 +328,7 @@ func (process *FatimaRuntimeProcess) Run() {
 
 func (process *FatimaRuntimeProcess) Stop() {
 	p, _ := os.FindProcess(process.env.GetSystemProc().GetPid())
-	p.Signal(os.Interrupt)
+	_ = p.Signal(os.Interrupt)
 }
 
 func (process *FatimaRuntimeProcess) Regist(component fatima.FatimaComponent) {
@@ -470,16 +474,16 @@ func (process *FatimaRuntimeProcess) parepareProcFolder(proc fatima.FatimaPkgPro
 	files, _ := filepath.Glob(fmt.Sprintf("%s%c%s.*.output", procFolder, filepath.Separator, proc.GetName()))
 	for _, v := range files {
 		if getFileSize(v) > 0 {
-			os.Rename(v, fmt.Sprintf("%s.old", v))
+			_ = os.Rename(v, fmt.Sprintf("%s.old", v))
 		} else {
-			os.Remove(v)
+			_ = os.Remove(v)
 		}
 	}
 
 	// remove old pid files
 	files, _ = filepath.Glob(fmt.Sprintf("%s%c%s.pid", procFolder, filepath.Separator, proc.GetName()))
 	for _, v := range files {
-		os.Remove(v)
+		_ = os.Remove(v)
 	}
 
 	// create my pid file

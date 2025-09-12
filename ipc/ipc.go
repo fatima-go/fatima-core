@@ -23,6 +23,7 @@ package ipc
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"sync"
@@ -33,15 +34,15 @@ import (
 
 type cronRunnableFunc func(string, []string)
 
-var facilitiesSetOnce sync.Once
-
 func StartIPCService(fr fatima.FatimaRuntime,
 	ps fatima.PlatformSupport,
 	goawayImpl fatima.FatimaRuntimeGoaway,
-	cronRunner cronRunnableFunc) {
-	facilitiesSetOnce.Do(func() {
-		setFacilities(fr, ps, goawayImpl, cronRunner)
-	})
+	cronRunner cronRunnableFunc) io.Closer {
+	if isServerRunning() {
+		return nil
+	}
+
+	setFacilities(fr, ps, goawayImpl, cronRunner)
 
 	// register a connection manager
 	registerConnectionManager()
@@ -52,6 +53,8 @@ func StartIPCService(fr fatima.FatimaRuntime,
 
 	// start server
 	startIPCServer()
+
+	return &ipcServiceCloser{}
 }
 
 func setFacilities(fr fatima.FatimaRuntime,
@@ -62,6 +65,13 @@ func setFacilities(fr fatima.FatimaRuntime,
 	platformSupporter = ps
 	goawayRunner = goawayImpl
 	cronRunner = runnable
+}
+
+type ipcServiceCloser struct{}
+
+func (c *ipcServiceCloser) Close() error {
+	stopIPCServer()
+	return nil
 }
 
 func StopIPCService() {
