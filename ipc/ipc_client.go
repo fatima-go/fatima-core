@@ -113,6 +113,9 @@ func (d *defaultClientSession) startRead() {
 			log.Warn("[%s] fail to parse initiator : %s", d.ctx, err.Error())
 			continue
 		}
+		if !d.connected {
+			break
+		}
 		d.messageChan <- message
 		log.Trace("[%s] recv from peer : %s", d.ctx, message)
 	}
@@ -133,8 +136,8 @@ func (d *defaultClientSession) Disconnect() {
 		return
 	}
 	log.Debug("[%s] disconnecting", d.ctx)
-	d.ctx.Close()
 	d.connected = false
+	d.ctx.Close()
 	close(d.messageChan)
 }
 

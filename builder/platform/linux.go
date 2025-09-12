@@ -27,7 +27,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -162,7 +161,7 @@ func (u *UnixProcess) Executable() string {
 // Refresh reloads all the data associated with reader process.
 func (u *UnixProcess) Refresh() error {
 	statPath := fmt.Sprintf("/proc/%d/stat", u.pid)
-	dataBytes, err := ioutil.ReadFile(statPath)
+	dataBytes, err := os.ReadFile(statPath)
 	if err != nil {
 		return err
 	}

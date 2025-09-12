@@ -23,7 +23,6 @@ package infra
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -68,19 +67,24 @@ func newMeasureFileWriter(env fatima.FatimaEnv) *MeasureFileWriter {
 
 // clearOldHistory delete old(before 24 hour) monitor files from history folder
 func clearOldHistory(path string) {
+	diff := 24 * time.Hour
+	deadline := time.Now().Add(-diff)
+
 	// find files in log path
-	files, err := ioutil.ReadDir(path)
+	entries, err := os.ReadDir(path)
 	if err != nil {
 		return
 	}
 
-	diff := 24 * time.Hour
-	deadline := time.Now().Add(-diff)
-	for _, file := range files {
-		if file.ModTime().After(deadline) {
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
 			continue
 		}
-		os.Remove(filepath.Join(path, file.Name()))
+		if info.ModTime().After(deadline) {
+			continue
+		}
+		_ = os.Remove(filepath.Join(path, info.Name()))
 	}
 }
 

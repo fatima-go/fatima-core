@@ -54,8 +54,11 @@ const (
 	CommandTransactionVerifyDone = "TRANSACTION_VERIFY_DONE"
 	CommandGoawayStart           = "GOAWAY_START"
 	CommandGoawayDone            = "GOAWAY_DONE"
+	CommandCronExecute           = "CRON_EXECUTE"
 	DataKeyTransaction           = "transaction"
 	DataKeyVerify                = "verify"
+	DataKeyJobName               = "job"
+	DataKeyJobSample             = "sample"
 )
 
 func newMessage(command string) Message {
@@ -93,6 +96,12 @@ func NewMessageTransactionVerify(transactionId string) Message {
 func NewMessageTransactionVerifyDone(transactionId string, result bool) Message {
 	m := newMessage(CommandTransactionVerifyDone)
 	m.Data = JsonBody{DataKeyTransaction: transactionId, DataKeyVerify: result}
+	return m
+}
+
+func NewMessageCronExecute(jobName, sample string) Message {
+	m := newMessage(CommandCronExecute)
+	m.Data = JsonBody{DataKeyJobName: jobName, DataKeyJobSample: sample}
 	return m
 }
 

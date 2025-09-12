@@ -72,9 +72,9 @@ func TestWithUserApplicationJuno(t *testing.T) {
 	time.Sleep(time.Millisecond * 100)
 	// goaway listener는 goaway 를 받은 프로세스가 juno 스스로일 경우 별도의 action을 하지 않는다
 	assert.False(t, junoSimulator.isSessionStarted())
-	assert.True(t, junoSimulator.isReceiveCommand())
-	assert.True(t, junoSimulator.isGoawayStartCalled())
-	assert.True(t, junoSimulator.isGoawayDoneCalled())
+	assert.False(t, junoSimulator.isReceiveCommand())
+	assert.False(t, junoSimulator.isGoawayStartCalled())
+	assert.False(t, junoSimulator.isGoawayDoneCalled())
 }
 
 // TestJunoVerifyMiss 사용자 프로세스가 goaway 를 받았을 경우
@@ -87,6 +87,8 @@ func TestJunoVerifyMiss(t *testing.T) {
 	assert.True(t, junoSimulator.isSessionStarted())
 	assert.True(t, junoSimulator.isReceiveCommand())
 	assert.True(t, junoSimulator.isCloseCalled())
+
+	// transaction verify 가 성공하지 못하면 goaway start/done 을 처리하지 않는다
 	assert.False(t, junoSimulator.isGoawayStartCalled())
 	assert.False(t, junoSimulator.isGoawayDoneCalled())
 }
@@ -101,6 +103,8 @@ func TestJunoVerifyFail(t *testing.T) {
 	assert.True(t, junoSimulator.isSessionStarted())
 	assert.True(t, junoSimulator.isReceiveCommand())
 	assert.True(t, junoSimulator.isCloseCalled())
+
+	// transaction verify 가 성공하지 못하면 goaway start/done 을 처리하지 않는다
 	assert.False(t, junoSimulator.isGoawayStartCalled())
 	assert.False(t, junoSimulator.isGoawayDoneCalled())
 }
@@ -117,6 +121,20 @@ func TestJunoVerifySuccess(t *testing.T) {
 	assert.True(t, junoSimulator.isCloseCalled())
 	assert.True(t, junoSimulator.isGoawayStartCalled())
 	assert.True(t, junoSimulator.isGoawayDoneCalled())
+}
+
+// TestJunoResponseInvalidTransaction 사용자 프로세스가 goaway 를 받았을 경우
+// juno에서 요청된 트랜잭션이 아닌 다른 트랜잭션 값을 응답
+func TestJunoResponseInvalidTransaction(t *testing.T) {
+	junoSimulator := startSimulation(&invalidTransactionJunoSimulator{}, mockGetProgramName)
+	defer stopIPCServer()
+
+	time.Sleep(time.Millisecond * 100)
+	assert.True(t, junoSimulator.isSessionStarted())
+	assert.True(t, junoSimulator.isReceiveCommand())
+	assert.True(t, junoSimulator.isCloseCalled())
+	assert.False(t, junoSimulator.isGoawayStartCalled())
+	assert.False(t, junoSimulator.isGoawayDoneCalled())
 }
 
 func newMockSessionContext(junoSimulator FatimaIPCSessionListener) SessionContext {
@@ -191,12 +209,6 @@ func (t *dummyJunoSimulator) StartSession(ctx SessionContext) {
 func (t *dummyJunoSimulator) OnReceiveCommand(ctx SessionContext, message Message) {
 	log.Info("[sim] OnReceiveCommand : %s", message)
 	t.receiveCommand = true
-
-	if message.Is(CommandGoawayStart) {
-		t.goawayStartCalled = true
-	} else if message.Is(CommandGoawayDone) {
-		t.goawayDoneCalled = true
-	}
 }
 
 func (t *dummyJunoSimulator) OnClose(ctx SessionContext) {
@@ -279,6 +291,43 @@ func (t *verifyTrueJunoSimulator) OnReceiveCommand(ctx SessionContext, message M
 }
 
 func (t *verifyTrueJunoSimulator) OnClose(ctx SessionContext) {
+	log.Info("OnClose : %s", ctx)
+	t.closeCalled = true
+}
+
+type invalidTransactionJunoSimulator struct {
+	dummyJunoSimulator
+}
+
+func (t *invalidTransactionJunoSimulator) StartSession(ctx SessionContext) {
+	log.Info("start session : %s", ctx)
+	t.sessionStarted = true
+}
+
+func (t *invalidTransactionJunoSimulator) OnReceiveCommand(ctx SessionContext, message Message) {
+	log.Info("[sim] OnReceiveCommand : %s", message)
+	t.receiveCommand = true
+
+	if message.Is(CommandTransactionVerify) {
+		transactionId := AsString(message.Data.GetValue(DataKeyTransaction))
+		if len(transactionId) == 0 {
+			log.Warn("[%s] received empty transaction id", ctx)
+			return
+		}
+		transactionId = "another_random_transaction"
+		err := ctx.SendCommand(NewMessageTransactionVerifyDone(transactionId, true))
+		if err != nil {
+			log.Warn("fail to send transaction verify done : %s", err.Error())
+		}
+		log.Debug("[%s] sent transaction verify true : %s", ctx, transactionId)
+	} else if message.Is(CommandGoawayStart) {
+		t.goawayStartCalled = true
+	} else if message.Is(CommandGoawayDone) {
+		t.goawayDoneCalled = true
+	}
+}
+
+func (t *invalidTransactionJunoSimulator) OnClose(ctx SessionContext) {
 	log.Info("OnClose : %s", ctx)
 	t.closeCalled = true
 }

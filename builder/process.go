@@ -35,6 +35,7 @@ import (
 	"github.com/fatima-go/fatima-core"
 	"github.com/fatima-go/fatima-core/builder/platform"
 	"github.com/fatima-go/fatima-core/ipc"
+	"github.com/fatima-go/fatima-core/lib"
 	"github.com/fatima-go/fatima-core/monitor"
 	"github.com/fatima-go/fatima-log"
 )
@@ -274,7 +275,7 @@ func (process *FatimaRuntimeProcess) Run() {
 
 	sigs := make(chan os.Signal, 1)
 	go func() {
-		for true {
+		for {
 			sig := <-process.sigs
 
 			// SIGUSR1 : call goaway
@@ -296,7 +297,7 @@ func (process *FatimaRuntimeProcess) Run() {
 
 	// process ipc start
 	if process.builder.GetProcessType() == fatima.PROCESS_TYPE_GENERAL {
-		ipc.StartIPCService(process, process.platform, process.interactor)
+		ipc.StartIPCService(process, process.platform, process.interactor, lib.Rerun)
 	}
 	process.interactor.Run()
 

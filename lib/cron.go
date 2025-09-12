@@ -47,7 +47,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -227,7 +226,7 @@ func registerCronjobCommandsToJuno() {
 	}
 
 	file := filepath.Join(dir, fatimaRuntime.GetEnv().GetSystemProc().GetProgramName()+".json")
-	err = ioutil.WriteFile(file, b, 0644)
+	err = os.WriteFile(file, b, 0644)
 	if err != nil {
 		log.Warn("fail to write cron commands to juno : %s", err.Error())
 		return
@@ -244,14 +243,12 @@ func ensureDirectory(dir string) error {
 	return nil
 }
 
-func Rerun(jobNameAndArgs string) {
-	log.Info("try to rerun job [%s]", jobNameAndArgs)
-	jobArgs := strings.Split(jobNameAndArgs, " ")
-	jobName := jobArgs[0]
+func Rerun(jobName string, args []string) {
+	log.Info("try to rerun job [%s]", jobName)
 	for _, job := range cronJobList {
 		if job.name == jobName {
 			go func() {
-				job.args = jobArgs[1:]
+				job.args = args
 				job.Run()
 				job.args = nil
 			}()
@@ -363,14 +360,20 @@ func scanRerunFile() {
 	}
 
 	lastRerunModifiedTime = stat.ModTime()
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return
 	}
 
 	jobNameAndArgs := strings.Trim(string(data), "\r\n ")
 	if len(jobNameAndArgs) > 0 {
-		Rerun(jobNameAndArgs)
+		command := strings.Split(jobNameAndArgs, " ")
+		jobName := command[0]
+		var jobArgs []string
+		if len(command) > 1 {
+			jobArgs = command[1:]
+		}
+		Rerun(jobName, jobArgs)
 		clearRerunFile()
 	}
 }

@@ -23,8 +23,8 @@ package lib
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -77,7 +77,7 @@ func (s *SlackNotification) loading() {
 	}
 
 	webhookConfigFile := filepath.Join(s.fatimaRuntime.GetEnv().GetFolderGuide().GetDataFolder(), fileWebhookSlack)
-	dataBytes, err := ioutil.ReadFile(webhookConfigFile)
+	dataBytes, err := os.ReadFile(webhookConfigFile)
 	if err != nil {
 		if log.IsDebugEnabled() {
 			log.Debug("fail to read file [%s] : %s", webhookConfigFile, err.Error())

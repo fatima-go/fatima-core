@@ -21,7 +21,7 @@
 package ipc
 
 import (
-	"sync"
+	"fmt"
 	"time"
 
 	log "github.com/fatima-go/fatima-log"
@@ -31,118 +31,74 @@ const (
 	junoProgramName = "juno"
 )
 
+// isApplicationJuno 현재 프로세스가 juno인지 아닌지 확인
+func isApplicationJuno() bool {
+	return envProvideHelper.getProgramName() == junoProgramName
+}
+
 func registerGoAwaySessionListener() {
 	RegisterIPCSessionListener(newGoAwaySessionListener())
 }
 
 func newGoAwaySessionListener() FatimaIPCSessionListener {
-	listener := &GoAwaySessionListener{}
-	listener.clientSessionMap = make(map[string]clientSessionRecord)
-	listener.cleanSessionTick = time.NewTicker(time.Minute)
-	go func() {
-		for range listener.cleanSessionTick.C {
-			listener.clientSessionLock.Lock()
-			for id, session := range listener.clientSessionMap {
-				if session.isExpired() {
-					delete(listener.clientSessionMap, id)
-					log.Trace("[IPC] clientSession %s removed", id)
-					continue
-				}
-			}
-			listener.clientSessionLock.Unlock()
-		}
-	}()
-	return listener
-}
-
-type clientSessionRecord struct {
-	ctx   SessionContext
-	epoch time.Time
-}
-
-func (c clientSessionRecord) isExpired() bool {
-	return time.Now().Before(c.epoch.Add(time.Minute * 2))
+	return &GoAwaySessionListener{}
 }
 
 type GoAwaySessionListener struct {
-	clientSessionLock sync.Mutex
-	clientSessionMap  map[string]clientSessionRecord
-	cleanSessionTick  *time.Ticker
-}
-
-func (g *GoAwaySessionListener) addClientSession(ctx SessionContext) {
-	g.clientSessionLock.Lock()
-	defer g.clientSessionLock.Unlock()
-	g.clientSessionMap[ctx.String()] = clientSessionRecord{ctx: ctx, epoch: time.Now()}
-}
-
-func (g *GoAwaySessionListener) removeClientSession(ctx SessionContext) {
-	g.clientSessionLock.Lock()
-	defer g.clientSessionLock.Unlock()
-	delete(g.clientSessionMap, ctx.String())
 }
 
 func (g *GoAwaySessionListener) StartSession(ctx SessionContext) {
 	log.Trace("[%s] start session", ctx)
-	g.addClientSession(ctx)
 }
 
-func (g *GoAwaySessionListener) callGoaway(ctx SessionContext, transactionId string) {
-	if goawayRunner == nil {
-		return
-	}
-
-	err := ctx.SendCommand(NewMessageGoawayStart(transactionId))
-	if err != nil {
-		log.Warn("[%s] fail to send goaway start : %s, %s", ctx, transactionId, err.Error())
-	}
-	log.Trace("[%s] sent goaway start : %s", ctx, transactionId)
-	goawayRunner.Goaway()
-	if err == nil {
-		err = ctx.SendCommand(NewMessageGoawayDone(transactionId))
-		if err != nil {
-			log.Warn("[%s] fail to send goaway done : %s, %s", ctx, transactionId, err.Error())
-		} else {
-			log.Trace("[%s] sent goaway done : %s", ctx, transactionId)
-		}
-	}
+func (g *GoAwaySessionListener) OnClose(ctx SessionContext) {
+	log.Trace("[%s] on close", ctx)
 }
 
 func (g *GoAwaySessionListener) OnReceiveCommand(ctx SessionContext, message Message) {
-	log.Trace("[%s] on receive command : %s", ctx, message)
+	log.Trace("IPC command incoming : %s", message)
 
 	if !message.Is(CommandGoaway) {
 		return
 	}
 
+	defer ctx.Close()
+
+	log.Warn("IPC process CommandGoaway : %s", message)
 	transactionId := AsString(message.Data.GetValue(DataKeyTransaction))
 	if len(transactionId) == 0 {
 		log.Warn("[%s] received empty transaction id", ctx)
-		ctx.Close()
 		return
 	}
 
-	if envProvideHelper.getProgramName() == junoProgramName {
+	if isApplicationJuno() {
 		log.Trace("[%s] juno call itself", ctx)
 		g.callGoaway(ctx, transactionId)
 		return
 	}
 
-	// STEP 1 : ask transaction is valid to juno
-	// prepare client
+	err := g.validateTransaction(ctx, transactionId)
+	if err != nil {
+		log.Warn("[%s] fail to validate transaction : %s", ctx, err.Error())
+	} else {
+		g.callGoaway(ctx, transactionId)
+	}
+}
+
+// validateTransaction goaway 요청이 들어온 transaction을 juno에게 질의해서 확인
+func (g *GoAwaySessionListener) validateTransaction(ctx SessionContext, transactionId string) error {
+	// STEP 1: ask transaction is valid to juno
+	// prepare junoClient
 	junoClient, err := newFatimaIPCClientSession(junoProgramName)
 	if err != nil {
-		log.Warn("[%s] cannot make connection to %s : %s", ctx, junoProgramName, err.Error())
-		ctx.Close()
-		return
+		return fmt.Errorf("cannot make connection to %s : %s", junoProgramName, err.Error())
 	}
+	defer junoClient.Disconnect()
 
 	// send transaction verify command
 	err = junoClient.SendCommand(NewMessageTransactionVerify(transactionId))
 	if err != nil {
-		log.Warn("[%s] fail to send transaction(%s) verify : %s", ctx, transactionId, err.Error())
-		ctx.Close()
-		return
+		return fmt.Errorf("fail to send transaction(%s) verify : %s", transactionId, err.Error())
 	}
 
 	c1 := make(chan Message, 1)
@@ -151,7 +107,6 @@ func (g *GoAwaySessionListener) OnReceiveCommand(ctx SessionContext, message Mes
 		clientMessage, e1 := junoClient.ReadCommand()
 		if e1 != nil {
 			log.Warn("[%s] fail to read command : %s", ctx, e1.Error())
-			ctx.Close()
 			return
 		}
 		c1 <- clientMessage
@@ -159,35 +114,52 @@ func (g *GoAwaySessionListener) OnReceiveCommand(ctx SessionContext, message Mes
 
 	// determine transaction from response is valid or not
 	select {
-	case msg := <-c1:
-		if !msg.Is(CommandTransactionVerifyDone) {
-			log.Warn("[%s] unexpected message received : %s", ctx, msg)
-			break
+	case junoResponse := <-c1:
+		if !junoResponse.Is(CommandTransactionVerifyDone) {
+			return fmt.Errorf("unexpected response from juno : %s", junoResponse)
 		}
-		receivedTransactionId := AsString(message.Data.GetValue(DataKeyTransaction))
+		receivedTransactionId := AsString(junoResponse.Data.GetValue(DataKeyTransaction))
 		if transactionId != receivedTransactionId {
-			log.Warn("[%s] transaction id mismatch : %s - %s", ctx, transactionId, receivedTransactionId)
-			break
+			return fmt.Errorf("transaction id mismatch : [%s:%s]", transactionId, receivedTransactionId)
 		}
-		verified := AsBool(msg.Data.GetValue(DataKeyVerify))
+		verified := AsBool(junoResponse.Data.GetValue(DataKeyVerify))
 		if !verified {
-			log.Warn("[%s] transaction verify fail : %s - %t", ctx, transactionId, verified)
-			break
+			return fmt.Errorf("transaction verify fail : [%s:%t]", transactionId, verified)
 		}
 
-		// STEP 2 : proceed goaway if verified
+		// STEP 2: proceed goaway if verified
 		log.Trace("[%s] transaction verify success : %s", ctx, transactionId)
-		g.callGoaway(ctx, transactionId)
 	case <-time.After(time.Second):
-		log.Warn("[%s] timeout to receive transaction verify done : %s", ctx, transactionId)
+		return fmt.Errorf("timeout to receive transaction verify done : %s", transactionId)
 	}
-
-	// close sessions
-	junoClient.Disconnect()
-	ctx.Close()
+	return nil
 }
 
-func (g *GoAwaySessionListener) OnClose(ctx SessionContext) {
-	log.Trace("[%s] on close", ctx)
-	g.removeClientSession(ctx)
+func (g *GoAwaySessionListener) callGoaway(ctx SessionContext, transactionId string) {
+	if goawayRunner == nil {
+		return
+	}
+
+	if isApplicationJuno() {
+		goawayRunner.Goaway()
+		return
+	}
+
+	// send goaway start command
+	err := ctx.SendCommand(NewMessageGoawayStart(transactionId))
+	if err != nil {
+		log.Warn("[%s] fail to send goaway start : %s, %s", ctx, transactionId, err.Error())
+	} else {
+		log.Warn("[%s] sent goaway start : %s", ctx, transactionId)
+	}
+	goawayRunner.Goaway()
+	if err == nil {
+		// send goaway done command
+		err = ctx.SendCommand(NewMessageGoawayDone(transactionId))
+		if err != nil {
+			log.Warn("[%s] fail to send goaway done : %s, %s", ctx, transactionId, err.Error())
+		} else {
+			log.Warn("[%s] sent goaway done : %s", ctx, transactionId)
+		}
+	}
 }

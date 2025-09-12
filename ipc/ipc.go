@@ -31,24 +31,37 @@ import (
 	log "github.com/fatima-go/fatima-log"
 )
 
+type cronRunnableFunc func(string, []string)
+
 var facilitiesSetOnce sync.Once
 
-func StartIPCService(fr fatima.FatimaRuntime, ps fatima.PlatformSupport, goawayImpl fatima.FatimaRuntimeGoaway) {
+func StartIPCService(fr fatima.FatimaRuntime,
+	ps fatima.PlatformSupport,
+	goawayImpl fatima.FatimaRuntimeGoaway,
+	cronRunner cronRunnableFunc) {
 	facilitiesSetOnce.Do(func() {
-		setFacilities(fr, ps, goawayImpl)
+		setFacilities(fr, ps, goawayImpl, cronRunner)
 	})
 
+	// register a connection manager
+	registerConnectionManager()
 	// register goaway session listener
 	registerGoAwaySessionListener()
+	// register cron listener
+	registerCronListener()
 
 	// start server
 	startIPCServer()
 }
 
-func setFacilities(fr fatima.FatimaRuntime, ps fatima.PlatformSupport, goawayImpl fatima.FatimaRuntimeGoaway) {
+func setFacilities(fr fatima.FatimaRuntime,
+	ps fatima.PlatformSupport,
+	goawayImpl fatima.FatimaRuntimeGoaway,
+	runnable cronRunnableFunc) {
 	fatimaRuntime = fr
 	platformSupporter = ps
 	goawayRunner = goawayImpl
+	cronRunner = runnable
 }
 
 func StopIPCService() {
@@ -58,6 +71,7 @@ func StopIPCService() {
 var fatimaRuntime fatima.FatimaRuntime
 var platformSupporter fatima.PlatformSupport
 var goawayRunner fatima.FatimaRuntimeGoaway
+var cronRunner cronRunnableFunc
 
 var ipcSessionListeners = make([]FatimaIPCSessionListener, 0)
 var ipcSessionListenerLock sync.Mutex
