@@ -54,7 +54,7 @@ func NewCustomResponseMarker(fatimaRuntime fatima.FatimaRuntime, name string, ma
 	}
 	m.part = part
 	m.build()
-	fatimaRuntime.RegistMeasureUnit(m)
+	fatimaRuntime.RegisterMeasureUnit(m)
 	return m
 }
 

@@ -71,16 +71,16 @@ func NewProcessInteractor(runtimeProcess *builder.FatimaRuntimeProcess) *Default
 	return instance
 }
 
-// Regist regist FatimaComponent
-func (i *DefaultProcessInteractor) Regist(component fatima.FatimaComponent) {
-	registComponent(component)
+// Register register FatimaComponent
+func (i *DefaultProcessInteractor) Register(component fatima.FatimaComponent) {
+	registerComponent(component)
 
 	if comp, ok := component.(monitor.FatimaSystemHAAware); ok {
-		i.RegistSystemHAAware(comp)
+		i.RegisterSystemHAAware(comp)
 	}
 
 	if comp, ok := component.(monitor.FatimaSystemPSAware); ok {
-		i.RegistSystemPSAware(comp)
+		i.RegisterSystemPSAware(comp)
 	}
 
 	if comp, ok := component.(fatima.FatimaIOReader); ok {
@@ -88,12 +88,12 @@ func (i *DefaultProcessInteractor) Regist(component fatima.FatimaComponent) {
 	}
 }
 
-func (i *DefaultProcessInteractor) RegistSystemHAAware(aware monitor.FatimaSystemHAAware) {
-	i.awareManager.RegistSystemHAAware(aware)
+func (i *DefaultProcessInteractor) RegisterSystemHAAware(aware monitor.FatimaSystemHAAware) {
+	i.awareManager.RegisterSystemHAAware(aware)
 }
 
-func (i *DefaultProcessInteractor) RegistSystemPSAware(aware monitor.FatimaSystemPSAware) {
-	i.awareManager.RegistSystemPSAware(aware)
+func (i *DefaultProcessInteractor) RegisterSystemPSAware(aware monitor.FatimaSystemPSAware) {
+	i.awareManager.RegisterSystemPSAware(aware)
 }
 
 func (i *DefaultProcessInteractor) Initialize() bool {
@@ -145,8 +145,8 @@ func (i *DefaultProcessInteractor) Shutdown() {
 	shutdownComponent(i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName())
 }
 
-func (i *DefaultProcessInteractor) RegistMeasureUnit(unit monitor.SystemMeasurable) {
-	i.measurement.registUnit(unit)
+func (i *DefaultProcessInteractor) RegisterMeasureUnit(unit monitor.SystemMeasurable) {
+	i.measurement.registerUnit(unit)
 }
 
 func (i *DefaultProcessInteractor) pprofService() {

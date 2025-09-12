@@ -70,8 +70,8 @@ func GetUserInteractiveFatimaRuntime(controller interface{}) fatima.FatimaRuntim
 	// set interactor
 	process.SetInteractor(infra.NewProcessInteractor(process))
 
-	// regist user interactive
-	process.Regist(newUserInteractive(controller))
+	// register user interactive
+	process.Register(newUserInteractive(controller))
 
 	return process
 }

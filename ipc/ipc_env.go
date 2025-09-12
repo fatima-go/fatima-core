@@ -53,7 +53,7 @@ func getProgramName() string {
 }
 
 func getSockDir() string {
-	return fatimaRuntime.GetEnv().GetFolderGuide().GetDataFolder()
+	return fatimaRuntime.GetEnv().GetFolderGuide().GetAppProcFolder()
 }
 
 func buildAddress() string {

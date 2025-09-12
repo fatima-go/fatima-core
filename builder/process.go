@@ -331,27 +331,27 @@ func (process *FatimaRuntimeProcess) Stop() {
 	_ = p.Signal(os.Interrupt)
 }
 
-func (process *FatimaRuntimeProcess) Regist(component fatima.FatimaComponent) {
+func (process *FatimaRuntimeProcess) Register(component fatima.FatimaComponent) {
 	if process.IsRunning() {
-		process.interactor.Regist(component)
+		process.interactor.Register(component)
 	}
 }
 
-func (process *FatimaRuntimeProcess) RegistSystemHAAware(aware monitor.FatimaSystemHAAware) {
+func (process *FatimaRuntimeProcess) RegisterSystemHAAware(aware monitor.FatimaSystemHAAware) {
 	if process.IsRunning() {
-		process.interactor.RegistSystemHAAware(aware)
+		process.interactor.RegisterSystemHAAware(aware)
 	}
 }
 
-func (process *FatimaRuntimeProcess) RegistSystemPSAware(aware monitor.FatimaSystemPSAware) {
+func (process *FatimaRuntimeProcess) RegisterSystemPSAware(aware monitor.FatimaSystemPSAware) {
 	if process.IsRunning() {
-		process.interactor.RegistSystemPSAware(aware)
+		process.interactor.RegisterSystemPSAware(aware)
 	}
 }
 
-func (process *FatimaRuntimeProcess) RegistMeasureUnit(unit monitor.SystemMeasurable) {
+func (process *FatimaRuntimeProcess) RegisterMeasureUnit(unit monitor.SystemMeasurable) {
 	if process.IsRunning() {
-		process.interactor.RegistMeasureUnit(unit)
+		process.interactor.RegisterMeasureUnit(unit)
 	}
 }
 

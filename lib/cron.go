@@ -257,7 +257,7 @@ func Rerun(jobName string, args []string) {
 	}
 }
 
-func RegistCronJob(runtime fatima.FatimaRuntime, jobName string, runnable func(string, fatima.FatimaRuntime, ...string)) error {
+func RegisterCronJob(runtime fatima.FatimaRuntime, jobName string, runnable func(string, fatima.FatimaRuntime, ...string)) error {
 	if runtime.GetConfig() == nil {
 		return errInvalidConfig
 	}
