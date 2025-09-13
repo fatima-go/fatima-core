@@ -115,11 +115,11 @@ func IsFatimaIPCAvailable(proc string) bool {
 	}
 
 	if !checkProcessRunning(proc, pid) {
-		log.Warn("process %s [%d] is not running", proc, pid)
+		log.Debug("process %s [%d] is not running", proc, pid)
 		return false
 	}
 
-	sockDir := fmt.Sprintf("%s/app/%s/data",
+	sockDir := fmt.Sprintf("%s/app/%s/proc",
 		fatimaRuntime.GetEnv().GetFolderGuide().GetFatimaHome(),
 		proc,
 	)
