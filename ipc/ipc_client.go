@@ -151,7 +151,8 @@ func buildClientAddress(proc string) (string, error) {
 		return "", fmt.Errorf("process not running")
 	}
 
-	return filepath.Join(envProvideHelper.getSockDir(),
+	return filepath.Join(
+		buildSockDir(proc),
 		fmt.Sprintf("%s%s.%d.sock",
 			sockFilePrefix,
 			proc,

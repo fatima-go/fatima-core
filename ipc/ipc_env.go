@@ -52,6 +52,15 @@ func getProgramName() string {
 	return fatimaRuntime.GetEnv().GetSystemProc().GetProgramName()
 }
 
+// buildSockDir 특정 프로세스에 대한 socket directory 를 구한다
+func buildSockDir(proc string) string {
+	return fmt.Sprintf("%s/app/%s/proc",
+		fatimaRuntime.GetEnv().GetFolderGuide().GetFatimaHome(),
+		proc,
+	)
+}
+
+// getSockDir 현재 프로세스의 socket directory 를 구한다
 func getSockDir() string {
 	return fatimaRuntime.GetEnv().GetFolderGuide().GetAppProcFolder()
 }

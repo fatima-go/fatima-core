@@ -22,7 +22,6 @@
 package ipc
 
 import (
-	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -119,11 +118,10 @@ func IsFatimaIPCAvailable(proc string) bool {
 		return false
 	}
 
-	sockDir := fmt.Sprintf("%s/app/%s/proc",
-		fatimaRuntime.GetEnv().GetFolderGuide().GetFatimaHome(),
+	sockFile := buildAddressForProcess(
+		buildSockDir(proc),
 		proc,
-	)
-	sockFile := buildAddressForProcess(sockDir, proc, pid)
+		pid)
 	stat, err := os.Stat(sockFile)
 	if err != nil {
 		return false
