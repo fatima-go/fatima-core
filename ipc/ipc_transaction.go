@@ -53,7 +53,7 @@ func addTransaction(id string) string {
 	return id
 }
 
-func isAliveTransaction(id string) bool {
+func IsAliveTransaction(id string) bool {
 	transactionLock.Lock()
 	defer transactionLock.Unlock()
 	until, found := transactionMap[id]

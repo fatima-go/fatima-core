@@ -37,10 +37,10 @@ func TestTransaction(t *testing.T) {
 	beforeTestTransaction()
 
 	tid := generateTransactionId()
-	assert.True(t, isAliveTransaction(tid))
+	assert.True(t, IsAliveTransaction(tid))
 
 	time.Sleep(2 * time.Second)
-	assert.False(t, isAliveTransaction(tid))
+	assert.False(t, IsAliveTransaction(tid))
 
 	tid = generateTransactionId()
 	tid = generateTransactionId()
