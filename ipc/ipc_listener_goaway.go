@@ -80,9 +80,11 @@ func (g *GoAwaySessionListener) OnReceiveCommand(ctx SessionContext, message Mes
 	err := g.validateTransaction(ctx, transactionId)
 	if err != nil {
 		log.Warn("[%s] fail to validate transaction : %s", ctx, err.Error())
-	} else {
-		g.callGoaway(ctx, transactionId)
+		return
 	}
+
+	// proceed goaway
+	g.callGoaway(ctx, transactionId)
 }
 
 // validateTransaction goaway 요청이 들어온 transaction을 juno에게 질의해서 확인

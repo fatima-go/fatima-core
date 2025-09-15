@@ -69,6 +69,10 @@ type defaultClientSession struct {
 	connected   bool
 }
 
+func (d *defaultClientSession) String() string {
+	return d.ctx.String()
+}
+
 func (d *defaultClientSession) SendCommand(message Message) error {
 	if d.connected == false {
 		return nil
