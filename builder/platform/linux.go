@@ -26,13 +26,13 @@ package platform
 import (
 	"errors"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/fatima-go/fatima-core"
 )
 
 type OSPlatform struct {
@@ -54,6 +54,32 @@ func (p *OSPlatform) EnsureSingleInstance(proc fatima.SystemProc) error {
 	}
 
 	return nil
+}
+
+func (p *OSPlatform) CheckProcessRunningByPid(procName string, pid int) bool {
+	statusFile := fmt.Sprintf("/proc/%d/status", pid)
+
+	contents, err := os.ReadFile(statusFile)
+	if err != nil {
+		return false
+	}
+	lines := strings.Split(string(contents), "\n")
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		switch fields[0] {
+		case "Name:":
+			if fields[1] == "java" {
+				return checkJavaPsName(procName, pid)
+			}
+			if procName != fields[1] {
+				// invalid(another) process
+				return false
+			}
+			return true
+		}
+	}
+
+	return false
 }
 
 func (p *OSPlatform) GetProcesses() ([]fatima.Process, error) {
@@ -135,7 +161,7 @@ func (u *UnixProcess) Executable() string {
 // Refresh reloads all the data associated with reader process.
 func (u *UnixProcess) Refresh() error {
 	statPath := fmt.Sprintf("/proc/%d/stat", u.pid)
-	dataBytes, err := ioutil.ReadFile(statPath)
+	dataBytes, err := os.ReadFile(statPath)
 	if err != nil {
 		return err
 	}
@@ -158,21 +184,21 @@ func (u *UnixProcess) Refresh() error {
 	return err
 }
 
-//func findProcess(pid int) (Process, error) {
-//	dir := fmt.Sprintf("/proc/%d", pid)
-//	_, err := os.Stat(dir)
-//	if err != nil {
-//		if os.IsNotExist(err) {
-//			return nil, nil
-//		}
-//
-//		return nil, err
-//	}
-//
-//	return newUnixProcess(pid)
-//}
-
 func newUnixProcess(pid int) (*UnixProcess, error) {
 	p := &UnixProcess{pid: pid}
 	return p, p.Refresh()
+}
+
+func checkJavaPsName(procName string, pid int) bool {
+	statusFile := fmt.Sprintf("/proc/%d/cmdline", pid)
+	contents, err := os.ReadFile(statusFile)
+	if err != nil {
+		return false
+	}
+	match := strings.Contains(string(contents), "psname="+procName)
+	if match {
+		return match
+	}
+
+	return strings.Contains(string(contents), "pscategory="+procName)
 }

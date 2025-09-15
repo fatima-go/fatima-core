@@ -47,16 +47,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-log"
-	robfig_cron "github.com/robfig/cron"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-log"
+	robfig_cron "github.com/robfig/cron"
 )
 
 const (
@@ -226,7 +226,7 @@ func registerCronjobCommandsToJuno() {
 	}
 
 	file := filepath.Join(dir, fatimaRuntime.GetEnv().GetSystemProc().GetProgramName()+".json")
-	err = ioutil.WriteFile(file, b, 0644)
+	err = os.WriteFile(file, b, 0644)
 	if err != nil {
 		log.Warn("fail to write cron commands to juno : %s", err.Error())
 		return
@@ -243,14 +243,12 @@ func ensureDirectory(dir string) error {
 	return nil
 }
 
-func Rerun(jobNameAndArgs string) {
-	log.Info("try to rerun job [%s]", jobNameAndArgs)
-	jobArgs := strings.Split(jobNameAndArgs, " ")
-	jobName := jobArgs[0]
+func Rerun(jobName string, args []string) {
+	log.Info("try to rerun job [%s]", jobName)
 	for _, job := range cronJobList {
 		if job.name == jobName {
 			go func() {
-				job.args = jobArgs[1:]
+				job.args = args
 				job.Run()
 				job.args = nil
 			}()
@@ -259,7 +257,7 @@ func Rerun(jobNameAndArgs string) {
 	}
 }
 
-func RegistCronJob(runtime fatima.FatimaRuntime, jobName string, runnable func(string, fatima.FatimaRuntime, ...string)) error {
+func RegisterCronJob(runtime fatima.FatimaRuntime, jobName string, runnable func(string, fatima.FatimaRuntime, ...string)) error {
 	if runtime.GetConfig() == nil {
 		return errInvalidConfig
 	}
@@ -338,7 +336,7 @@ func newCronJob(config fatima.Config, name string, runnable func(string, fatima.
 
 func clearRerunFile() {
 	file := filepath.Join(fatimaRuntime.GetEnv().GetFolderGuide().GetDataFolder(), fileRerun)
-	os.Remove(file)
+	_ = os.Remove(file)
 }
 
 func startRerunFileScanner() {
@@ -362,14 +360,20 @@ func scanRerunFile() {
 	}
 
 	lastRerunModifiedTime = stat.ModTime()
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return
 	}
 
 	jobNameAndArgs := strings.Trim(string(data), "\r\n ")
 	if len(jobNameAndArgs) > 0 {
-		Rerun(jobNameAndArgs)
+		command := strings.Split(jobNameAndArgs, " ")
+		jobName := command[0]
+		var jobArgs []string
+		if len(command) > 1 {
+			jobArgs = command[1:]
+		}
+		Rerun(jobName, jobArgs)
 		clearRerunFile()
 	}
 }

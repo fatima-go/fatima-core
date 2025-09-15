@@ -23,14 +23,14 @@ package infra
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/monitor"
-	"github.com/fatima-go/fatima-log"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/monitor"
+	"github.com/fatima-go/fatima-log"
 )
 
 type logLevelItem struct {
@@ -55,10 +55,10 @@ func (c *CentralFilebaseManagement) GetPSStatus() (monitor.PSStatus, bool) {
 		"cfm",
 		"ha",
 		"system.ps")
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			ioutil.WriteFile(filePath, []byte(strconv.Itoa(monitor.PS_STATUS_SECONDARY)), 0644)
+			_ = os.WriteFile(filePath, []byte(strconv.Itoa(monitor.PS_STATUS_SECONDARY)), 0644)
 			return monitor.PS_STATUS_SECONDARY, true
 		}
 		return monitor.PS_STATUS_UNKNOWN, true
@@ -77,10 +77,10 @@ func (c *CentralFilebaseManagement) GetHAStatus() (monitor.HAStatus, bool) {
 		"cfm",
 		"ha",
 		"system.ha")
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			ioutil.WriteFile(filePath, []byte(strconv.Itoa(monitor.HA_STATUS_STANDBY)), 0644)
+			_ = os.WriteFile(filePath, []byte(strconv.Itoa(monitor.HA_STATUS_STANDBY)), 0644)
 			return monitor.HA_STATUS_STANDBY, true
 		}
 		return monitor.HA_STATUS_UNKNOWN, true
@@ -98,7 +98,7 @@ func (c *CentralFilebaseManagement) GetLogLevel() (log.LogLevel, bool) {
 		"package",
 		"cfm",
 		"loglevels")
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Println("read file fail", err)
 		return log.LOG_NONE, false

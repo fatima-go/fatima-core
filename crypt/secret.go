@@ -26,10 +26,11 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	log "github.com/fatima-go/fatima-log"
 	"os"
 	"strings"
+
+	"github.com/fatima-go/fatima-core"
+	log "github.com/fatima-go/fatima-log"
 )
 
 const (

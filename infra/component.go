@@ -23,11 +23,12 @@ package infra
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
+	"sync"
+
 	"github.com/fatima-go/fatima-core"
 	"github.com/fatima-go/fatima-core/lib"
 	"github.com/fatima-go/fatima-log"
-	"runtime/debug"
-	"sync"
 )
 
 var compPreInit []fatima.FatimaComponent
@@ -42,7 +43,7 @@ func init() {
 	compWriter = make([]fatima.FatimaComponent, 0)
 }
 
-func registComponent(comp fatima.FatimaComponent) {
+func registerComponent(comp fatima.FatimaComponent) {
 	if c, ok := comp.(fatima.FatimaComponentTypeOrder); ok {
 		switch c.GetType() {
 		case fatima.COMP_PRE_INIT:
@@ -59,7 +60,7 @@ func registComponent(comp fatima.FatimaComponent) {
 	}
 }
 
-// initializeComponent : initialize registed FatimaComponent
+// initializeComponent : initialize registered FatimaComponent
 func initializeComponent() (res bool) {
 	res = false
 

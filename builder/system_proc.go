@@ -21,11 +21,12 @@
 package builder
 
 import (
-	"github.com/fatima-go/fatima-core"
 	"os"
 	"os/user"
 	"strconv"
 	"strings"
+
+	"github.com/fatima-go/fatima-core"
 )
 
 type FatimaSystemProc struct {

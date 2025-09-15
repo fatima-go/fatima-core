@@ -23,8 +23,9 @@ package lib
 import (
 	"bytes"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
 	"sync"
+
+	"github.com/fatima-go/fatima-core"
 )
 
 type ResponseMarker interface {
@@ -53,7 +54,7 @@ func NewCustomResponseMarker(fatimaRuntime fatima.FatimaRuntime, name string, ma
 	}
 	m.part = part
 	m.build()
-	fatimaRuntime.RegistMeasureUnit(m)
+	fatimaRuntime.RegisterMeasureUnit(m)
 	return m
 }
 

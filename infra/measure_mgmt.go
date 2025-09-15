@@ -21,9 +21,10 @@
 package infra
 
 import (
+	"time"
+
 	"github.com/fatima-go/fatima-core/builder"
 	"github.com/fatima-go/fatima-core/monitor"
-	"time"
 )
 
 // newSystemMeasureManagement process measure. e.g) Heap size, gc cycle count, ....
@@ -35,7 +36,7 @@ func newSystemMeasureManagement(runtimeProcess *builder.FatimaRuntimeProcess) *S
 	mgmt.units = make([]monitor.SystemMeasurable, 0)
 
 	// currently only process measurement provided
-	mgmt.registUnit(newProcessMeasurement())
+	mgmt.registerUnit(newProcessMeasurement())
 
 	return mgmt
 }
@@ -46,7 +47,7 @@ type SystemMeasureManagement struct {
 	writer         MeasurementWriter
 }
 
-func (s *SystemMeasureManagement) registUnit(unit monitor.SystemMeasurable) {
+func (s *SystemMeasureManagement) registerUnit(unit monitor.SystemMeasurable) {
 	s.units = append(s.units, unit)
 }
 

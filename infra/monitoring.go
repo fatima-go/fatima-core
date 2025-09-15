@@ -52,11 +52,11 @@ func newSystemAwareManagement(runtimeProcess *builder.FatimaRuntimeProcess, mon 
 	return instance
 }
 
-func (s *SystemAwareManagement) RegistSystemHAAware(aware monitor.FatimaSystemHAAware) {
+func (s *SystemAwareManagement) RegisterSystemHAAware(aware monitor.FatimaSystemHAAware) {
 	s.awareHA = append(s.awareHA, aware)
 }
 
-func (s *SystemAwareManagement) RegistSystemPSAware(aware monitor.FatimaSystemPSAware) {
+func (s *SystemAwareManagement) RegisterSystemPSAware(aware monitor.FatimaSystemPSAware) {
 	s.awarePS = append(s.awarePS, aware)
 }
 

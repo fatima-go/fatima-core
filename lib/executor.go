@@ -22,11 +22,12 @@ package lib
 
 import (
 	"context"
-	"github.com/fatima-go/fatima-log"
 	"runtime"
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
+
+	"github.com/fatima-go/fatima-log"
 )
 
 type Executor interface {

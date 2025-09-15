@@ -25,10 +25,10 @@ import (
 )
 
 type FatimaRuntimeInteractor interface {
-	Regist(component FatimaComponent)
-	RegistSystemHAAware(aware monitor.FatimaSystemHAAware)
-	RegistSystemPSAware(aware monitor.FatimaSystemPSAware)
-	RegistMeasureUnit(unit monitor.SystemMeasurable)
+	Register(component FatimaComponent)
+	RegisterSystemHAAware(aware monitor.FatimaSystemHAAware)
+	RegisterSystemPSAware(aware monitor.FatimaSystemPSAware)
+	RegisterMeasureUnit(unit monitor.SystemMeasurable)
 	Run()
 	Stop()
 }

@@ -23,20 +23,20 @@ package infra
 import (
 	"bytes"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-log"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-log"
 )
 
 const (
-	SUFFIX_MONITOR = "monitor"
-	FOLDER_MONITOR = "monitor"
-	FOLDER_HISTORY = "history"
-	MAX_FILE_SIZE  = 30 << (10 * 2) // 30 MB
+	SuffixMonitor = "monitor"
+	FolderMonitor = "monitor"
+	FolderHistory = "history"
+	MaxFileSize   = 30 << (10 * 2) // 30 MB
 )
 
 type MeasurementWriter interface {
@@ -48,10 +48,10 @@ func newMeasureFileWriter(env fatima.FatimaEnv) *MeasureFileWriter {
 	fileName := fmt.Sprintf("%s.%d.%s",
 		env.GetSystemProc().GetProgramName(),
 		env.GetSystemProc().GetPid(),
-		SUFFIX_MONITOR)
-	baseDir := filepath.Join(env.GetFolderGuide().GetAppProcFolder(), FOLDER_MONITOR)
+		SuffixMonitor)
+	baseDir := filepath.Join(env.GetFolderGuide().GetAppProcFolder(), FolderMonitor)
 	instance.filePath = filepath.Join(baseDir, fileName)
-	instance.historyPath = filepath.Join(baseDir, FOLDER_HISTORY)
+	instance.historyPath = filepath.Join(baseDir, FolderHistory)
 	ensureDirectory(baseDir, true)
 	ensureDirectory(instance.historyPath, true)
 
@@ -67,19 +67,24 @@ func newMeasureFileWriter(env fatima.FatimaEnv) *MeasureFileWriter {
 
 // clearOldHistory delete old(before 24 hour) monitor files from history folder
 func clearOldHistory(path string) {
+	diff := 24 * time.Hour
+	deadline := time.Now().Add(-diff)
+
 	// find files in log path
-	files, err := ioutil.ReadDir(path)
+	entries, err := os.ReadDir(path)
 	if err != nil {
 		return
 	}
 
-	diff := 24 * time.Hour
-	deadline := time.Now().Add(-diff)
-	for _, file := range files {
-		if file.ModTime().After(deadline) {
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
 			continue
 		}
-		os.Remove(filepath.Join(path, file.Name()))
+		if info.ModTime().After(deadline) {
+			continue
+		}
+		_ = os.Remove(filepath.Join(path, info.Name()))
 	}
 }
 
@@ -136,7 +141,7 @@ func checkSwitch(active string) {
 		return
 	}
 
-	if stat.Size() > MAX_FILE_SIZE {
+	if stat.Size() > MaxFileSize {
 		log.Trace("switch monitor file...")
 		backup := fmt.Sprintf("%s.backup", active)
 		os.Rename(active, backup)
