@@ -23,9 +23,10 @@ package crypt
 import (
 	"encoding/base64"
 	"fmt"
+	"testing"
+
 	log "github.com/fatima-go/fatima-log"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var sample = "hello fatima-go"

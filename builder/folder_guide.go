@@ -22,11 +22,12 @@ package builder
 
 import (
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/lib"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/lib"
 )
 
 const (

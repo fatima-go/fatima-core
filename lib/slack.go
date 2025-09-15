@@ -23,13 +23,14 @@ package lib
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-log"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-log"
 )
 
 const (
@@ -76,7 +77,7 @@ func (s *SlackNotification) loading() {
 	}
 
 	webhookConfigFile := filepath.Join(s.fatimaRuntime.GetEnv().GetFolderGuide().GetDataFolder(), fileWebhookSlack)
-	dataBytes, err := ioutil.ReadFile(webhookConfigFile)
+	dataBytes, err := os.ReadFile(webhookConfigFile)
 	if err != nil {
 		if log.IsDebugEnabled() {
 			log.Debug("fail to read file [%s] : %s", webhookConfigFile, err.Error())
@@ -154,7 +155,10 @@ func sendEventToSlack(url string, b []byte, message string) {
 		return
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		log.Debug("successfully send to slack : %s", message)
 	} else {

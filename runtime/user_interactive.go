@@ -26,8 +26,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -36,25 +34,28 @@ import (
 	"strings"
 	"syscall"
 	"unicode"
+
+	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-log"
 )
 
 const (
-	COMMAND_MENU = iota
-	COMMAND_CALL
-	COMMAND_TEXT
+	CommandMenu = iota
+	CommandCall
+	CommandText
 )
 
 const (
-	COMMAND_COMMON_QUIT   = "q"
-	COMMAND_COMMON_REDO   = "r"
-	COMMAND_COMMON_GOBACK = "b"
+	CommandCommonQuit   = "q"
+	CommandCommonRedo   = "r"
+	CommandCommonGoback = "b"
 )
 
 const (
-	TYPE_INT = iota
-	TYPE_STRING
-	TYPE_BOOL
-	TYPE_FLOAT
+	TypeInt = iota
+	TypeString
+	TypeBool
+	TypeFloat
 )
 
 type CommandType int
@@ -176,7 +177,7 @@ type Stage struct {
 }
 
 func (s Stage) AskInteraction() string {
-	if s.commandType == COMMAND_MENU {
+	if s.commandType == CommandMenu {
 		s.printMenu()
 	} else {
 		s.interactParameters()
@@ -193,12 +194,12 @@ func (s Stage) AskInteraction() string {
 func (s Stage) Execute(userEnter string) bool {
 	command := strings.ToLower(userEnter)
 	switch command {
-	case COMMAND_COMMON_QUIT:
+	case CommandCommonQuit:
 		return false
-	case COMMAND_COMMON_REDO:
+	case CommandCommonRedo:
 		execute()
 		return true
-	case COMMAND_COMMON_GOBACK:
+	case CommandCommonGoback:
 		uiSet.goBack()
 	default:
 		next := s.findItem(userEnter)
@@ -211,9 +212,9 @@ func (s Stage) Execute(userEnter string) bool {
 			return true
 		}
 
-		if stage.commandType == COMMAND_MENU {
+		if stage.commandType == CommandMenu {
 			uiSet.goNext(stage)
-		} else if stage.commandType == COMMAND_CALL {
+		} else if stage.commandType == CommandCall {
 			return executeCommand(next.Signature, stage)
 		}
 	}
@@ -234,7 +235,7 @@ func (s Stage) printMenu() {
 	fmt.Printf("\n================\n")
 	fmt.Printf("%s\n", s.getGuideText())
 	for _, v := range s.Items {
-		if v.commandType == COMMAND_TEXT {
+		if v.commandType == CommandText {
 			continue
 		}
 		fmt.Printf("[%s] %s\n", v.Key, v.Text)
@@ -251,7 +252,7 @@ func (s Stage) interactParameters() {
 
 func (s Stage) getGuideText() string {
 	for _, v := range s.Items {
-		if v.commandType == COMMAND_TEXT {
+		if v.commandType == CommandText {
 			return v.Text
 		}
 	}
@@ -262,37 +263,37 @@ func (s Stage) getGuideText() string {
 func refineStage(stage *Stage) {
 	keyIndex := 1
 	if len(stage.Items) > 0 {
-		stage.commandType = COMMAND_MENU
+		stage.commandType = CommandMenu
 		for i := 0; i < len(stage.Items); i++ {
 			comp := strings.ToLower(stage.Items[i].Category)
 			switch comp {
 			case "text":
-				stage.Items[i].commandType = COMMAND_TEXT
+				stage.Items[i].commandType = CommandText
 			case "menu":
-				stage.Items[i].commandType = COMMAND_MENU
+				stage.Items[i].commandType = CommandMenu
 				stage.Items[i].Key = strconv.Itoa(keyIndex)
 				keyIndex++
 			case "call":
-				stage.Items[i].commandType = COMMAND_CALL
+				stage.Items[i].commandType = CommandCall
 				stage.Items[i].Key = strconv.Itoa(keyIndex)
 				keyIndex++
 			}
 		}
 	} else {
-		stage.commandType = COMMAND_CALL
+		stage.commandType = CommandCall
 		for i := 0; i < len(stage.Parameters); i++ {
 			comp := strings.ToLower(stage.Parameters[i].Type)
 			switch comp {
 			case "string":
-				stage.Parameters[i].ptype = TYPE_STRING
+				stage.Parameters[i].ptype = TypeString
 			case "int":
-				stage.Parameters[i].ptype = TYPE_INT
+				stage.Parameters[i].ptype = TypeInt
 			case "bool":
-				stage.Parameters[i].ptype = TYPE_BOOL
+				stage.Parameters[i].ptype = TypeBool
 			case "float":
-				stage.Parameters[i].ptype = TYPE_FLOAT
+				stage.Parameters[i].ptype = TypeFloat
 			default:
-				stage.Parameters[i].ptype = TYPE_STRING
+				stage.Parameters[i].ptype = TypeString
 			}
 		}
 	}
@@ -343,7 +344,7 @@ func askParameters(stage Stage) ([]string, bool) {
 		scanner := bufio.NewScanner(os.Stdin)
 		if scanner.Scan() {
 			a := scanner.Text()
-			if a == COMMAND_COMMON_QUIT {
+			if a == CommandCommonQuit {
 				return answer, false
 			}
 			if len(a) == 0 {
@@ -363,22 +364,22 @@ func buildParameters(stage Stage, answer []string) ([]reflect.Value, bool) {
 	params := make([]reflect.Value, 0)
 	for i, v := range stage.Parameters {
 		switch v.ptype {
-		case TYPE_INT:
+		case TypeInt:
 			c, err := strconv.Atoi(answer[i])
 			if err != nil {
 				fmt.Printf("fail to convert %s to int : %s", answer[i], err.Error())
 				return params, false
 			}
 			params = append(params, reflect.ValueOf(c))
-		case TYPE_STRING:
+		case TypeString:
 			params = append(params, reflect.ValueOf(answer[i]))
-		case TYPE_BOOL:
+		case TypeBool:
 			if strings.ToUpper(answer[i]) == "TRUE" {
 				params = append(params, reflect.ValueOf(true))
 			} else {
 				params = append(params, reflect.ValueOf(false))
 			}
-		case TYPE_FLOAT:
+		case TypeFloat:
 			c, err := strconv.ParseFloat(answer[i], 64)
 			if err != nil {
 				fmt.Printf("fail to convert %s to float64 : %s", answer[i], err.Error())
