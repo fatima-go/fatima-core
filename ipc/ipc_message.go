@@ -118,6 +118,10 @@ func (m Message) Is(command string) bool {
 	return m.Initiator.Command == command
 }
 
+func (m Message) GetTransactionId() string {
+	return AsString(m.Data.GetValue(DataKeyTransaction))
+}
+
 type Initiator struct {
 	Process string `json:"process"`
 	Command string `json:"command"`

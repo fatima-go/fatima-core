@@ -85,7 +85,7 @@ func clearAllTransaction() {
 }
 
 var transactionAliveDuration = time.Minute
-var cleanTransactionTickDuration = time.Minute
+var cleanTransactionTickDuration = time.Second
 
 // for testing purpose
 func setTransactionAliveDuration(duration time.Duration) {
