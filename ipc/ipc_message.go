@@ -77,13 +77,13 @@ func NewMessageGoaway() Message {
 
 func NewMessageGoawayStart(transactionId string) Message {
 	m := newMessage(CommandGoawayStart)
-	m.Data = JsonBody{DataKeyTransaction: generateTransactionId()}
+	m.Data = JsonBody{DataKeyTransaction: transactionId}
 	return m
 }
 
 func NewMessageGoawayDone(transactionId string) Message {
 	m := newMessage(CommandGoawayDone)
-	m.Data = JsonBody{DataKeyTransaction: generateTransactionId()}
+	m.Data = JsonBody{DataKeyTransaction: transactionId}
 	return m
 }
 
