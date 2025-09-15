@@ -21,26 +21,81 @@
 
 package ipc
 
-func propagateSessionStarted(ctx SessionContext) {
+import "sync"
+
+var ipcSessionListeners = make([]chan SessionEvent, 0)
+var ipcSessionListenerLock sync.Mutex
+
+func RegisterIPCSessionListener(listener FatimaIPCSessionListener) {
+	sessionEventChan := make(chan SessionEvent, 8)
+
+	ipcSessionListenerLock.Lock()
+	ipcSessionListeners = append(ipcSessionListeners, sessionEventChan)
+	ipcSessionListenerLock.Unlock()
+
+	go func() {
+		for event := range sessionEventChan {
+			switch event.eventType {
+			case SessionEventStart:
+				listener.StartSession(event.ctx)
+			case SessionEventReceiveCommand:
+				listener.OnReceiveCommand(event.ctx, event.message)
+			case SessionEventClose:
+				listener.OnClose(event.ctx)
+			}
+		}
+	}()
+}
+
+func closeAllSessionListeners() {
 	ipcSessionListenerLock.Lock()
 	defer ipcSessionListenerLock.Unlock()
-	for _, v := range ipcSessionListeners {
-		go v.StartSession(ctx)
+	for _, listenerChan := range ipcSessionListeners {
+		close(listenerChan)
+	}
+	ipcSessionListeners = nil
+}
+
+type SessionEventType uint8
+
+const (
+	SessionEventStart SessionEventType = iota
+	SessionEventReceiveCommand
+	SessionEventClose
+)
+
+type SessionEvent struct {
+	eventType SessionEventType
+	ctx       SessionContext
+	message   Message
+}
+
+func propagateSessionStarted(ctx SessionContext) {
+	sessionEvent := SessionEvent{eventType: SessionEventStart, ctx: ctx}
+
+	ipcSessionListenerLock.Lock()
+	defer ipcSessionListenerLock.Unlock()
+	for _, listenerChan := range ipcSessionListeners {
+		listenerChan <- sessionEvent
 	}
 }
 
 func propagateOnReceiveCommand(ctx SessionContext, message Message) {
+	sessionEvent := SessionEvent{eventType: SessionEventReceiveCommand, ctx: ctx, message: message}
+
 	ipcSessionListenerLock.Lock()
 	defer ipcSessionListenerLock.Unlock()
-	for _, v := range ipcSessionListeners {
-		go v.OnReceiveCommand(ctx, message)
+	for _, listenerChan := range ipcSessionListeners {
+		listenerChan <- sessionEvent
 	}
 }
 
 func propagateOnClose(ctx SessionContext) {
+	sessionEvent := SessionEvent{eventType: SessionEventClose, ctx: ctx}
+
 	ipcSessionListenerLock.Lock()
 	defer ipcSessionListenerLock.Unlock()
-	for _, v := range ipcSessionListeners {
-		go v.OnClose(ctx)
+	for _, listenerChan := range ipcSessionListeners {
+		listenerChan <- sessionEvent
 	}
 }

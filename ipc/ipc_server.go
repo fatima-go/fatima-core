@@ -117,6 +117,7 @@ func stopIPCServer() {
 	if ipcServerSocket != nil {
 		_ = ipcServerSocket.Close()
 		ipcServerSocket = nil
+		closeAllSessionListeners()
 	}
 }
 

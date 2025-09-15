@@ -25,7 +25,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"sync"
 
 	"github.com/fatima-go/fatima-core"
 	log "github.com/fatima-go/fatima-log"
@@ -81,15 +80,6 @@ var fatimaRuntime fatima.FatimaRuntime
 var platformSupporter fatima.PlatformSupport
 var goawayRunner fatima.FatimaRuntimeGoaway
 var cronRunner cronRunnableFunc
-
-var ipcSessionListeners = make([]FatimaIPCSessionListener, 0)
-var ipcSessionListenerLock sync.Mutex
-
-func RegisterIPCSessionListener(listener FatimaIPCSessionListener) {
-	ipcSessionListenerLock.Lock()
-	defer ipcSessionListenerLock.Unlock()
-	ipcSessionListeners = append(ipcSessionListeners, listener)
-}
 
 type FatimaIPCSessionListener interface {
 	StartSession(ctx SessionContext)
