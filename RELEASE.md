@@ -1,5 +1,8 @@
 # release #
 
+## v1.2.1 ##
+- [[bug] ipc session expire 처리 문제 수정 #21](https://github.com/fatima-go/fatima-core/issues/21)
+
 ## v1.2.0 ##
 - 전체적으로 잘못된 메소드명 수정 : regist -> register<br>
 - [보다 나은 IPC 인터페이스 제공](https://github.com/fatima-go/fatima-core/issues/19)
