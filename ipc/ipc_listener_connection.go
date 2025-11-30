@@ -63,7 +63,7 @@ type clientSessionRecord struct {
 }
 
 func (c clientSessionRecord) isExpired() bool {
-	return time.Now().Before(c.epoch.Add(sessionExpireDuration))
+	return time.Now().After(c.epoch.Add(sessionExpireDuration))
 }
 
 type ConnectionListener struct {
