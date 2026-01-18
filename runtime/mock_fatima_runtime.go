@@ -29,6 +29,8 @@ import (
 	"strings"
 
 	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/builder"
+	"github.com/fatima-go/fatima-core/crypt"
 	"github.com/fatima-go/fatima-core/monitor"
 )
 
@@ -186,7 +188,14 @@ func readMockProperties(path string) (map[string]string, error) {
 		if idx < 1 {
 			continue
 		}
-		resolved[line[:idx]] = line[idx+1:]
+		key := strings.TrimSpace(line[:idx])
+		value := strings.TrimSpace(line[idx+1:])
+
+		if strings.HasSuffix(key, builder.SecretKeySuffix) {
+			value = crypt.ResolveSecret(value)
+		}
+
+		resolved[key] = value
 	}
 
 	return resolved, nil
