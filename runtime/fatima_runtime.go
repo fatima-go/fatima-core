@@ -26,7 +26,7 @@ import (
 	"github.com/fatima-go/fatima-core/infra"
 )
 
-var process *builder.FatimaRuntimeProcess
+var process fatima.FatimaRuntime
 
 // GetFatimaRuntime return fatima runtime
 func GetFatimaRuntime() fatima.FatimaRuntime {
@@ -40,16 +40,17 @@ func GetGeneralFatimaRuntime() fatima.FatimaRuntime {
 	}
 
 	// prepare process
-	process = builder.NewFatimaRuntime()
+	runtimeProcess := builder.NewFatimaRuntime()
+	process = runtimeProcess
 
 	// set runtime builder which has fatima package process information and config
-	builder := getRuntimeBuilder(process.GetEnv(), fatima.PROCESS_TYPE_GENERAL)
+	builder := getRuntimeBuilder(runtimeProcess.GetEnv(), fatima.PROCESS_TYPE_GENERAL)
 
 	// initializing process using runtime builder
-	process.Initialize(builder)
+	runtimeProcess.Initialize(builder)
 
 	// set interactor
-	process.SetInteractor(infra.NewProcessInteractor(process))
+	runtimeProcess.SetInteractor(infra.NewProcessInteractor(runtimeProcess))
 
 	return process
 }
@@ -61,17 +62,18 @@ func GetUserInteractiveFatimaRuntime(controller interface{}) fatima.FatimaRuntim
 	}
 
 	// prepare process
-	process = builder.NewFatimaRuntime()
+	runtimeProcess := builder.NewFatimaRuntime()
+	process = runtimeProcess
 
 	// set builder
-	builder := getRuntimeBuilder(process.GetEnv(), fatima.PROCESS_TYPE_UI)
-	process.Initialize(builder)
+	builder := getRuntimeBuilder(runtimeProcess.GetEnv(), fatima.PROCESS_TYPE_UI)
+	runtimeProcess.Initialize(builder)
 
 	// set interactor
-	process.SetInteractor(infra.NewProcessInteractor(process))
+	runtimeProcess.SetInteractor(infra.NewProcessInteractor(runtimeProcess))
 
 	// register user interactive
-	process.Register(newUserInteractive(controller))
+	runtimeProcess.Register(newUserInteractive(controller))
 
 	return process
 }
