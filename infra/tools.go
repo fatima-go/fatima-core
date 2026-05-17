@@ -50,7 +50,7 @@ func expressBytes(bytes uint64) string {
 	case bytes >= KILOBYTE:
 		return fmt.Sprintf("%dK", (int)(value/KILOBYTE))
 	case bytes >= BYTE:
-		return fmt.Sprintf("%dB", value)
+		return fmt.Sprintf("%dB", (int)(value))
 	}
 
 	return "0"

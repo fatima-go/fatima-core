@@ -529,7 +529,7 @@ func getFileSize(p string) int {
 
 func check(e error) {
 	if e != nil {
-		panic(fmt.Errorf("fail to build runtime : ", e))
+		panic(fmt.Errorf("fail to build runtime : %w", e))
 	}
 }
 

@@ -28,78 +28,32 @@ import (
 	"strings"
 
 	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/crypt"
-	"github.com/fatima-go/fatima-log"
+	log "github.com/fatima-go/fatima-log"
 )
 
 type PropertyConfigReader struct {
-	predefines    fatima.Predefines
-	env           fatima.FatimaEnv
-	configuration map[string]string
+	predefines      fatima.Predefines
+	configuration   map[string]string
+	format          string
+	yamlListKeys    map[string]bool
+	yamlSkippedKeys map[string]bool
 }
 
 // NewPropertyConfigReader serving properties(key/value) for process
 func NewPropertyConfigReader(env fatima.FatimaEnv, predefines fatima.Predefines) *PropertyConfigReader {
-	instance := new(PropertyConfigReader)
-	instance.env = env
-
-	// predefines : builtin + fatima global config
-	instance.predefines = predefines
-	instance.configuration = make(map[string]string)
-
-	// find proper properties file path for process
-	propFilePath := loadApplicationProperty(env)
-	if len(propFilePath) == 0 {
-		log.Warn("cannot load properties file...")
-		return instance
-	}
-
-	log.Info("using properties file : %s", filepath.Base(propFilePath))
-
-	// read properties (key=value pairs)
-	props, err := readProperties(propFilePath)
-	if err != nil {
-		log.Warn("cannot load properties file : %s", err.Error())
-	}
-	if props != nil {
-		for k, v := range props {
-			// from application.xxx.properties
-			// e.g) writedb.url=${var.db.write.url}?autocommit=true&timeout=180s&readTimeout=180s
-			// k : writedb.url
-			// v : ${var.db.write.url}?autocommit=true&timeout=180s&readTimeout=180s
-			// maybe fatima global predefine file (fatima-package-predefines.properties) contains "var.db.write.url"
-			// so we need to resolve(replace)
-			instance.configuration[k] = predefines.ResolvePredefine(v) // PropertyPredefineReader.ResolvePredefine()
-
-			// need secret replace
-			if strings.HasSuffix(k, SecretKeySuffix) {
-				// overwrite with resolved content1
-				instance.configuration[k] = crypt.ResolveSecret(v)
-			}
-		}
+	loaded := LoadApplicationConfig(
+		env.GetFolderGuide().GetAppFolder(),
+		env.GetProfile(),
+		predefines,
+	)
+	instance := &PropertyConfigReader{
+		predefines:      predefines,
+		configuration:   loaded.Values,
+		format:          loaded.Format,
+		yamlListKeys:    loaded.YamlListKeys,
+		yamlSkippedKeys: loaded.YamlSkippedKeys,
 	}
 	return instance
-}
-
-// loadApplicationProperty find proper properties file path for process
-func loadApplicationProperty(env fatima.FatimaEnv) string {
-	list := make([]string, 0)
-	if env.GetProfile() != "" {
-		list = append(list, fmt.Sprintf("%s.%s.properties", env.GetSystemProc().GetProgramName(), env.GetProfile()))
-		list = append(list, fmt.Sprintf("application.%s.properties", env.GetProfile()))
-	}
-
-	list = append(list, fmt.Sprintf("%s.properties", env.GetSystemProc().GetProgramName()))
-	list = append(list, "application.properties")
-
-	for _, v := range list {
-		propFilePath := filepath.Join(env.GetFolderGuide().GetAppFolder(), v)
-		if checkFileAvailable(propFilePath) {
-			return propFilePath
-		}
-	}
-
-	return ""
 }
 
 func (this *PropertyConfigReader) GetValue(key string) (string, bool) {
@@ -143,12 +97,45 @@ func (this *PropertyConfigReader) GetBool(key string) (bool, error) {
 	return false, nil
 }
 
+func (this *PropertyConfigReader) GetList(key string) ([]string, error) {
+	if this.yamlSkippedKeys[key] {
+		return nil, fmt.Errorf("unsupported value type for list at key : %s", key)
+	}
+
+	v, ok := this.configuration[key]
+	if !ok {
+		return nil, fmt.Errorf("not found key in config : %s", key)
+	}
+
+	if v == "" {
+		return []string{}, nil
+	}
+
+	if this.format == "properties" || this.yamlListKeys[key] {
+		return SplitCommaTrim(v), nil
+	}
+
+	return []string{v}, nil
+}
+
 func (this *PropertyConfigReader) ResolvePredefine(value string) string {
 	return this.predefines.ResolvePredefine(value)
 }
 
 func (this *PropertyConfigReader) GetDefine(key string) (string, bool) {
 	return this.predefines.GetDefine(key)
+}
+
+// SplitCommaTrim splits s by comma, trims whitespace from each element, and removes empty elements.
+func SplitCommaTrim(s string) []string {
+	parts := strings.Split(s, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }
 
 func checkFileAvailable(path string) bool {

@@ -21,16 +21,15 @@
 package runtime
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/fatima-go/fatima-core"
 	"github.com/fatima-go/fatima-core/builder"
-	"github.com/fatima-go/fatima-core/crypt"
 	"github.com/fatima-go/fatima-core/monitor"
 )
 
@@ -120,85 +119,44 @@ func (m *MockFatimaRuntime) Stop() {
 }
 
 type MockConfig struct {
-	m map[string]string
+	m               map[string]string
+	format          string
+	yamlListKeys    map[string]bool
+	yamlSkippedKeys map[string]bool
 }
 
 func NewMockConfigWithMap(m map[string]string) *MockConfig {
-	return &MockConfig{m: m}
+	return &MockConfig{
+		m:               m,
+		yamlListKeys:    make(map[string]bool),
+		yamlSkippedKeys: make(map[string]bool),
+	}
 }
 
 func NewMockConfig() *MockConfig {
-	m := make(map[string]string)
-
-	// find project root
 	wd, _ := os.Getwd()
 	root, found := findProjectRoot(wd) // defined in mock_fatima_env.go
 	if !found {
-		return &MockConfig{m: m}
+		return &MockConfig{
+			m:               make(map[string]string),
+			yamlListKeys:    make(map[string]bool),
+			yamlSkippedKeys: make(map[string]bool),
+		}
 	}
 
 	resourcesDir := filepath.Join(root, "resources")
-
-	// determine profile
 	profile := os.Getenv(fatima.ENV_FATIMA_PROFILE)
 	if profile == "" {
 		profile = "local"
 	}
 
-	// check application.{profile}.properties
-	propFile := filepath.Join(resourcesDir, fmt.Sprintf("application.%s.properties", profile))
-	if _, err := os.Stat(propFile); os.IsNotExist(err) {
-		// check application.properties
-		propFile = filepath.Join(resourcesDir, "application.properties")
+	loaded := builder.LoadApplicationConfig(resourcesDir, profile, nil)
+	return &MockConfig{
+		m:               loaded.Values,
+		format:          loaded.Format,
+		yamlListKeys:    loaded.YamlListKeys,
+		yamlSkippedKeys: loaded.YamlSkippedKeys,
 	}
-
-	if _, err := os.Stat(propFile); err == nil {
-		props, err := readMockProperties(propFile)
-		if err == nil {
-			m = props
-		}
-	}
-
-	return &MockConfig{m: m}
-}
-
-func readMockProperties(path string) (map[string]string, error) {
-	resolved := make(map[string]string)
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var line string
-	var idx int
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line = strings.Trim(scanner.Text(), " ")
-		if strings.HasPrefix(line, "#") || len(line) < 3 {
-			continue
-		}
-		idx = strings.Index(line, "#")
-		if idx > 0 {
-			if line[idx-1] == ' ' {
-				line = line[:idx]
-			}
-		}
-		idx = strings.Index(line, "=")
-		if idx < 1 {
-			continue
-		}
-		key := strings.TrimSpace(line[:idx])
-		value := strings.TrimSpace(line[idx+1:])
-
-		if strings.HasSuffix(key, builder.SecretKeySuffix) {
-			value = crypt.ResolveSecret(value)
-		}
-
-		resolved[key] = value
-	}
-
-	return resolved, nil
 }
 
 func (c *MockConfig) GetValue(key string) (string, bool) {
@@ -215,11 +173,48 @@ func (c *MockConfig) GetString(key string) (string, error) {
 }
 
 func (c *MockConfig) GetInt(key string) (int, error) {
-	return 0, nil
+	v, ok := c.m[key]
+	if !ok {
+		return 0, fmt.Errorf("not found key : %s", key)
+	}
+	i, err := strconv.Atoi(v)
+	if err != nil {
+		return 0, fmt.Errorf("not numeric value for key %s : %s", key, err.Error())
+	}
+	return i, nil
 }
 
 func (c *MockConfig) GetBool(key string) (bool, error) {
+	v, ok := c.m[key]
+	if !ok {
+		return false, fmt.Errorf("not found key : %s", key)
+	}
+	switch strings.ToUpper(v) {
+	case "TRUE":
+		return true, nil
+	}
 	return false, nil
+}
+
+func (c *MockConfig) GetList(key string) ([]string, error) {
+	if c.yamlSkippedKeys[key] {
+		return nil, fmt.Errorf("unsupported value type for list at key : %s", key)
+	}
+
+	v, ok := c.m[key]
+	if !ok {
+		return nil, fmt.Errorf("not found key : %s", key)
+	}
+
+	if v == "" {
+		return []string{}, nil
+	}
+
+	if c.format == "properties" || c.yamlListKeys[key] {
+		return builder.SplitCommaTrim(v), nil
+	}
+
+	return []string{v}, nil
 }
 
 // MockPackaging

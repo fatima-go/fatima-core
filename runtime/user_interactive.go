@@ -159,7 +159,7 @@ type Item struct {
 }
 
 func (i Item) String() string {
-	return fmt.Sprintf("commandType=%s, category=%s, key=%s, sig=%s, text=%s",
+	return fmt.Sprintf("commandType=%d, category=%s, key=%s, sig=%s, text=%s",
 		i.commandType, i.Category, i.Key, i.Signature, i.Text)
 }
 
@@ -303,7 +303,7 @@ func executeCommand(funcName string, stage Stage) (ret bool) {
 	ret = true
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("**PANIC** while executing...\n", errors.New(fmt.Sprintf("%s", r)))
+			fmt.Printf("**PANIC** while executing... %s\n", errors.New(fmt.Sprintf("%s", r)))
 			fmt.Printf("%s", string(debug.Stack()))
 			return
 		}
@@ -398,7 +398,7 @@ func buildParameters(stage Stage, answer []string) ([]reflect.Value, bool) {
 func executeBareCommand(funcName string) bool {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("**PANIC** while executing...\n", errors.New(fmt.Sprintf("%s", r)))
+			fmt.Printf("**PANIC** while executing... %s\n", errors.New(fmt.Sprintf("%s", r)))
 			fmt.Printf("%s", string(debug.Stack()))
 			return
 		}

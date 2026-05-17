@@ -30,6 +30,7 @@ type Config interface {
 	GetString(key string) (string, error)
 	GetInt(key string) (int, error)
 	GetBool(key string) (bool, error)
+	GetList(key string) ([]string, error)
 }
 
 type Packaging interface {
