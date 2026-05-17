@@ -56,7 +56,7 @@ import (
 
 	"github.com/fatima-go/fatima-core"
 	"github.com/fatima-go/fatima-log"
-	robfig_cron "github.com/robfig/cron"
+	robfig_cron "github.com/robfig/cron/v3"
 )
 
 const (
@@ -269,7 +269,7 @@ func RegisterCronJob(runtime fatima.FatimaRuntime, jobName string, runnable func
 		return err
 	}
 
-	err = cron.AddJob(job.spec, job)
+	_, err = cron.AddJob(job.spec, job)
 	if err != nil {
 		return err
 	}
@@ -283,7 +283,7 @@ func RegisterCronJob(runtime fatima.FatimaRuntime, jobName string, runnable func
 func ensureSingleCronInstance(runtime fatima.FatimaRuntime) {
 	cronCreationLock.Lock()
 	if cron == nil {
-		cron = robfig_cron.New()
+		cron = robfig_cron.New(robfig_cron.WithSeconds())
 		fatimaRuntime = runtime
 		clearRerunFile()
 		startRerunFileScanner()
