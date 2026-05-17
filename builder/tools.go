@@ -22,7 +22,6 @@ package builder
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -40,7 +39,7 @@ func ensureDirectory(path string, forceCreate bool) error {
 				return os.MkdirAll(path, 0755)
 			}
 		} else if !stat.IsDir() {
-			return errors.New(fmt.Sprintf("%s path exist as file", path))
+			return fmt.Errorf("%s path exist as file", path)
 		}
 	}
 
@@ -74,7 +73,7 @@ func readProperties(path string) (map[string]string, error) {
 		if idx < 1 {
 			continue
 		}
-		resolved[line[:idx]] = line[idx+1:]
+		resolved[strings.TrimSpace(line[:idx])] = strings.TrimSpace(line[idx+1:])
 	}
 
 	return resolved, nil

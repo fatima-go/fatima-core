@@ -132,7 +132,7 @@ func buildEventMessage(fatimaRuntime fatima.FatimaRuntime, message string, v ...
 			} else if e, ok := a.(uint64); ok {
 				args = append(args, fmt.Sprintf("%d", e))
 			} else if e, ok := a.(bool); ok {
-				args = append(args, fmt.Sprintf("%b", e))
+				args = append(args, fmt.Sprintf("%t", e))
 			} else {
 				args = append(args, ".")
 			}
