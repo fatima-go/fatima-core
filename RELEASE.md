@@ -1,5 +1,16 @@
 # release #
 
+## v1.3.1 ##
+- [yaml 파일에 fatima.profile 추가](https://github.com/fatima-go/fatima-core/issues/25)
+  - 단일 `application.yaml` 파일 안에 `---` 구분자로 환경별 설정 블록을 작성 가능 (multi-document YAML)
+  - `fatima.profile` 키가 없는 문서를 base(공통값)로 사용하며, `FATIMA_PROFILE` 환경변수 값과 일치하는 블록을 base 위에 머지
+  - multi-doc 파일이 감지되면 기존 별도 파일(`application.{profile}.yaml`) 방식은 자동으로 무시됨 (multi-doc 우선, 별도파일 fallback)
+  - 매칭되는 profile 블록이 없는 경우 base만 적용 (에러 없음)
+  - `FATIMA_PROFILE` 미설정 시 base 문서만 사용
+  - `fatima.profile` 키는 결과 Config에서 제거됨 (메타 정보로만 사용)
+  - `.yml` 확장자도 동일하게 지원. `properties` 포맷은 single-document 방식 유지
+  - `FATIMA_PROFILE` 환경변수를 단일 진입점에서 한 번만 읽어 multi-doc 키 매칭과 별도파일명 결정에 동일하게 적용 (단일 출처 원칙)
+
 ## v1.3.0 ##
 - [yaml 파일 config 추가 지원](https://github.com/fatima-go/fatima-core/issues/24)
   - **[Breaking]** `{programName}.properties` / `{programName}.{profile}.properties` 파일 검색 제거. `application.*` 이름으로 고정

@@ -20,7 +20,9 @@
 package builder
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -32,24 +34,92 @@ type yamlLoadResult struct {
 	Values      map[string]string
 	ListKeys    map[string]bool
 	SkippedKeys map[string]bool
+	IsMultiDoc  bool
 }
 
-func loadYamlFile(path string) (yamlLoadResult, error) {
+func loadYamlFile(path string, profile string) (yamlLoadResult, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return yamlLoadResult{}, err
 	}
-	var raw map[string]any
-	if err = yaml.Unmarshal(data, &raw); err != nil {
-		return yamlLoadResult{}, err
+
+	docs := make([]map[string]any, 0)
+	dec := yaml.NewDecoder(bytes.NewReader(data))
+	for {
+		var doc map[string]any
+		if err = dec.Decode(&doc); err == io.EOF {
+			break
+		} else if err != nil {
+			return yamlLoadResult{}, err
+		}
+		if doc != nil {
+			docs = append(docs, doc)
+		}
 	}
+
 	result := yamlLoadResult{
 		Values:      make(map[string]string),
 		ListKeys:    make(map[string]bool),
 		SkippedKeys: make(map[string]bool),
 	}
-	flattenYaml("", raw, &result)
+
+	if len(docs) <= 1 {
+		if len(docs) == 1 {
+			flattenYaml("", docs[0], &result)
+		}
+		return result, nil
+	}
+
+	// multi-doc 모드: fatima.profile 키 유무로 base/profile 블록 분류
+	result.IsMultiDoc = true
+	var base map[string]any
+	matching := make([]map[string]any, 0)
+	for _, d := range docs {
+		p := extractAndStripProfile(d)
+		switch {
+		case p == "":
+			if base != nil {
+				log.Warn("multiple base documents found in %s, last one wins", path)
+			}
+			base = d
+		case p == profile && profile != "":
+			matching = append(matching, d)
+		}
+	}
+
+	if base != nil {
+		flattenYaml("", base, &result)
+	}
+	for i, m := range matching {
+		if i > 0 {
+			log.Warn("duplicate profile '%s' block in %s, later overrides earlier", profile, path)
+		}
+		flattenYaml("", m, &result)
+	}
 	return result, nil
+}
+
+// extractAndStripProfile reads fatima.profile from the document, removes the key,
+// and cleans up the fatima map if it becomes empty. Returns the profile string (empty if absent).
+func extractAndStripProfile(doc map[string]any) string {
+	fatimaVal, ok := doc["fatima"]
+	if !ok {
+		return ""
+	}
+	fatimaMap, ok := fatimaVal.(map[string]any)
+	if !ok {
+		return ""
+	}
+	profileVal, ok := fatimaMap["profile"]
+	if !ok {
+		return ""
+	}
+	profile := fmt.Sprintf("%v", profileVal)
+	delete(fatimaMap, "profile")
+	if len(fatimaMap) == 0 {
+		delete(doc, "fatima")
+	}
+	return profile
 }
 
 func flattenYaml(prefix string, in map[string]any, result *yamlLoadResult) {

@@ -210,6 +210,110 @@ func TestLoadApplicationConfig(t *testing.T) {
 			},
 			want: map[string]string{"feature.enabled": "true"},
 		},
+		// --- multi-doc 케이스 ---
+		{
+			name: "yaml_multidoc_base_plus_profile_dev",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.yaml",
+					"servicedb:\n  url: base_url\n  maxidleconns: 0\n  maxopenconns: 4\n"+
+						"---\nfatima:\n  profile: dev\nservicedb:\n  maxidleconns: 4\n"+
+						"---\nfatima:\n  profile: qa\nservicedb:\n  maxidleconns: 12\n")
+			},
+			profile: "dev",
+			want: map[string]string{
+				"servicedb.url":          "base_url",
+				"servicedb.maxidleconns": "4",
+				"servicedb.maxopenconns": "4",
+			},
+		},
+		{
+			name: "yaml_multidoc_no_matching_profile",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.yaml",
+					"key1: base\n"+
+						"---\nfatima:\n  profile: dev\nkey1: devval\n"+
+						"---\nfatima:\n  profile: qa\nkey1: qaval\n")
+			},
+			profile: "stg",
+			want:    map[string]string{"key1": "base"},
+		},
+		{
+			name: "yaml_multidoc_empty_profile",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.yaml",
+					"key1: base\n"+
+						"---\nfatima:\n  profile: dev\nkey1: devval\n")
+			},
+			profile: "",
+			want:    map[string]string{"key1": "base"},
+		},
+		{
+			name: "yaml_multidoc_overrides_separate_file",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.yaml",
+					"key1: base\n"+
+						"---\nfatima:\n  profile: dev\nkey1: multidoc_dev\n")
+				// 별도파일이 존재해도 multi-doc이면 무시되어야 한다
+				writeTestFile(t, dir, "application.dev.yaml", "key1: separate_dev\n")
+			},
+			profile: "dev",
+			want:    map[string]string{"key1": "multidoc_dev"},
+		},
+		{
+			name: "yaml_multidoc_duplicate_profile_warn",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.yaml",
+					"key1: base\n"+
+						"---\nfatima:\n  profile: dev\nkey1: first_dev\n"+
+						"---\nfatima:\n  profile: dev\nkey1: second_dev\n")
+			},
+			profile: "dev",
+			want:    map[string]string{"key1": "second_dev"},
+		},
+		{
+			name: "yaml_multidoc_fatima_profile_key_removed",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.yaml",
+					"key1: base\n"+
+						"---\nfatima:\n  profile: dev\nkey2: devval\n")
+			},
+			profile: "dev",
+			check: func(t *testing.T, result map[string]string) {
+				_, hasFatimaProfile := result["fatima.profile"]
+				assert.False(t, hasFatimaProfile, "fatima.profile should be stripped from result")
+				assert.Equal(t, "base", result["key1"])
+				assert.Equal(t, "devval", result["key2"])
+			},
+		},
+		{
+			name: "yml_multidoc_supported",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.yml",
+					"key1: base\n"+
+						"---\nfatima:\n  profile: dev\nkey1: devval\n")
+			},
+			profile: "dev",
+			want:    map[string]string{"key1": "devval"},
+		},
+		{
+			name: "yaml_single_doc_unchanged",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.yaml", "key1: base\nkey2: val2\n")
+				writeTestFile(t, dir, "application.dev.yaml", "key1: overridden\n")
+			},
+			profile: "dev",
+			want:    map[string]string{"key1": "overridden", "key2": "val2"},
+		},
+		{
+			name: "yaml_multidoc_base_only",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.yaml",
+					"key1: base\n"+
+						"---\nfatima:\n  profile: dev\nkey1: devval\n")
+			},
+			profile: "qa",
+			want:    map[string]string{"key1": "base"},
+		},
 	}
 
 	for _, tt := range tests {

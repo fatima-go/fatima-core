@@ -31,7 +31,7 @@ import (
 
 var configFormats = []string{"yaml", "yml", "properties"}
 
-type configLoaderFunc func(string) (yamlLoadResult, error)
+type configLoaderFunc func(string, string) (yamlLoadResult, error)
 
 var configLoaders = map[string]configLoaderFunc{
 	"yaml":       loadYamlFile,
@@ -39,7 +39,7 @@ var configLoaders = map[string]configLoaderFunc{
 	"properties": loadPropertiesFile,
 }
 
-func loadPropertiesFile(path string) (yamlLoadResult, error) {
+func loadPropertiesFile(path string, _ string) (yamlLoadResult, error) {
 	values, err := readProperties(path)
 	if err != nil {
 		return yamlLoadResult{}, err
@@ -61,8 +61,11 @@ type LoadedApplicationConfig struct {
 
 // LoadApplicationConfig loads merged application config from appDir.
 // Format search order: yaml > yml > properties.
-// Base file (application.<ext>) is loaded first; profile override (application.<profile>.<ext>)
-// is merged on top. Both files must use the same format.
+// If the base file contains multiple YAML documents (separated by ---), multi-doc mode is used:
+// documents without fatima.profile are treated as base; the document matching the given profile
+// is merged on top. Separate profile override files are ignored in multi-doc mode.
+// If the base file is a single document, the original behaviour applies: base file is loaded first,
+// then the profile override file (application.<profile>.<ext>) is merged on top.
 // predefines may be nil; if provided, ${var.*} placeholders are resolved after loading.
 func LoadApplicationConfig(appDir string, profile string, predefines fatima.Predefines) LoadedApplicationConfig {
 	chosenExt := resolveConfigFormat(appDir, profile)
@@ -81,22 +84,26 @@ func LoadApplicationConfig(appDir string, profile string, predefines fatima.Pred
 	skippedKeys := make(map[string]bool)
 
 	basePath := filepath.Join(appDir, "application."+chosenExt)
+	isMultiDoc := false
 	if checkFileAvailable(basePath) {
 		log.Info("loading base config: %s", filepath.Base(basePath))
-		if r, err := loader(basePath); err != nil {
+		if r, err := loader(basePath, profile); err != nil {
 			log.Warn("cannot load base config %s: %s", filepath.Base(basePath), err.Error())
 		} else {
+			isMultiDoc = r.IsMultiDoc
 			mergeConfig(merged, r.Values)
 			mergeMeta(listKeys, r.ListKeys)
 			mergeMeta(skippedKeys, r.SkippedKeys)
 		}
 	}
 
-	if profile != "" {
+	if isMultiDoc {
+		log.Info("multi-document yaml detected, skipping separate profile file")
+	} else if profile != "" {
 		overridePath := filepath.Join(appDir, fmt.Sprintf("application.%s.%s", profile, chosenExt))
 		if checkFileAvailable(overridePath) {
 			log.Info("applying profile override: %s", filepath.Base(overridePath))
-			if r, err := loader(overridePath); err != nil {
+			if r, err := loader(overridePath, profile); err != nil {
 				log.Warn("cannot load profile config %s: %s", filepath.Base(overridePath), err.Error())
 			} else {
 				mergeConfig(merged, r.Values)
