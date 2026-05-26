@@ -79,25 +79,20 @@ func LoadApplicationConfig(appDir string, profile string, predefines fatima.Pred
 	}
 
 	loader := configLoaders[chosenExt]
-	merged := make(map[string]string)
-	listKeys := make(map[string]bool)
-	skippedKeys := make(map[string]bool)
+	merged := newYamlLoadResult()
 
 	basePath := filepath.Join(appDir, "application."+chosenExt)
-	isMultiDoc := false
 	if checkFileAvailable(basePath) {
 		log.Info("loading base config: %s", filepath.Base(basePath))
 		if r, err := loader(basePath, profile); err != nil {
 			log.Warn("cannot load base config %s: %s", filepath.Base(basePath), err.Error())
 		} else {
-			isMultiDoc = r.IsMultiDoc
-			mergeConfig(merged, r.Values)
-			mergeMeta(listKeys, r.ListKeys)
-			mergeMeta(skippedKeys, r.SkippedKeys)
+			merged.IsMultiDoc = r.IsMultiDoc
+			mergeFlattened(&merged, r, "")
 		}
 	}
 
-	if isMultiDoc {
+	if merged.IsMultiDoc {
 		log.Info("multi-document yaml detected, skipping separate profile file")
 	} else if profile != "" {
 		overridePath := filepath.Join(appDir, fmt.Sprintf("application.%s.%s", profile, chosenExt))
@@ -106,28 +101,26 @@ func LoadApplicationConfig(appDir string, profile string, predefines fatima.Pred
 			if r, err := loader(overridePath, profile); err != nil {
 				log.Warn("cannot load profile config %s: %s", filepath.Base(overridePath), err.Error())
 			} else {
-				mergeConfig(merged, r.Values)
-				mergeMeta(listKeys, r.ListKeys)
-				mergeMeta(skippedKeys, r.SkippedKeys)
+				mergeFlattened(&merged, r, "profile file "+filepath.Base(overridePath))
 			}
 		}
 	}
 
-	for k, v := range merged {
+	for k, v := range merged.Values {
 		if predefines != nil {
 			v = predefines.ResolvePredefine(v)
 		}
 		if strings.HasSuffix(k, SecretKeySuffix) {
 			v = crypt.ResolveSecret(v)
 		}
-		merged[k] = v
+		merged.Values[k] = v
 	}
 
 	return LoadedApplicationConfig{
-		Values:          merged,
+		Values:          merged.Values,
 		Format:          chosenExt,
-		YamlListKeys:    listKeys,
-		YamlSkippedKeys: skippedKeys,
+		YamlListKeys:    merged.ListKeys,
+		YamlSkippedKeys: merged.SkippedKeys,
 	}
 }
 
@@ -147,16 +140,4 @@ func resolveConfigFormat(appDir string, profile string) string {
 		}
 	}
 	return ""
-}
-
-func mergeConfig(base, overlay map[string]string) {
-	for k, v := range overlay {
-		base[k] = v
-	}
-}
-
-func mergeMeta(base, overlay map[string]bool) {
-	for k, v := range overlay {
-		base[k] = v
-	}
 }

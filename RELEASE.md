@@ -1,5 +1,17 @@
 # release #
 
+## v1.3.2 ##
+- config override 로깅 정리 및 base/profile flatten 구조 개선
+  - **같은 파일/문서 내부 키 충돌** → `WARN` 유지
+    - YAML: dot-notation 키와 nested 맵이 같은 평탄화 키를 생성하는 경우
+    - properties: 동일 파일 내 중복 키(다른 값)
+  - **base → profile override** → `INFO`로 격하 (이전: `WARN`)
+    - multi-doc YAML 내 base 문서 → profile 문서 머지
+    - 별도 파일 방식(`application.yaml` → `application.{profile}.yaml/.properties`) 포함
+    - 값이 실제로 달라질 때만 로깅. 동일 값으로 덮어쓰는 경우는 침묵
+  - 내부 구현: 각 YAML 문서를 독립된 map으로 평탄화(`flattenDoc`)한 뒤 별도 `mergeFlattened` 단계에서 병합. 충돌 판단 위치와 override 판단 위치가 분리되어 로그 의미가 명확해짐
+  - `application_loader.go`의 base/profile 파일 간 머지도 동일한 `mergeFlattened` 경로로 통일 (yaml, yml, properties 전 포맷 동일하게 적용)
+
 ## v1.3.1 ##
 - [yaml 파일에 fatima.profile 추가](https://github.com/fatima-go/fatima-core/issues/25)
   - 단일 `application.yaml` 파일 안에 `---` 구분자로 환경별 설정 블록을 작성 가능 (multi-document YAML)

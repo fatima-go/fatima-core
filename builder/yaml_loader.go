@@ -37,6 +37,14 @@ type yamlLoadResult struct {
 	IsMultiDoc  bool
 }
 
+func newYamlLoadResult() yamlLoadResult {
+	return yamlLoadResult{
+		Values:      make(map[string]string),
+		ListKeys:    make(map[string]bool),
+		SkippedKeys: make(map[string]bool),
+	}
+}
+
 func loadYamlFile(path string, profile string) (yamlLoadResult, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -57,23 +65,33 @@ func loadYamlFile(path string, profile string) (yamlLoadResult, error) {
 		}
 	}
 
-	result := yamlLoadResult{
-		Values:      make(map[string]string),
-		ListKeys:    make(map[string]bool),
-		SkippedKeys: make(map[string]bool),
-	}
-
 	if len(docs) <= 1 {
 		if len(docs) == 1 {
-			flattenYaml("", docs[0], &result)
+			return flattenDoc(docs[0]), nil
 		}
-		return result, nil
+		return newYamlLoadResult(), nil
 	}
 
 	// multi-doc 모드: fatima.profile 키 유무로 base/profile 블록 분류
+	result := newYamlLoadResult()
 	result.IsMultiDoc = true
-	var base map[string]any
-	matching := make([]map[string]any, 0)
+
+	base, matching := classifyDocs(docs, profile, path)
+	if base != nil {
+		mergeFlattened(&result, flattenDoc(base), "")
+	}
+	for i, m := range matching {
+		if i > 0 {
+			log.Warn("duplicate profile '%s' block in %s, later overrides earlier", profile, path)
+		}
+		mergeFlattened(&result, flattenDoc(m), fmt.Sprintf("profile '%s'", profile))
+	}
+	return result, nil
+}
+
+// classifyDocs separates documents into a base (no fatima.profile) and matching profile docs.
+func classifyDocs(docs []map[string]any, profile string, path string) (base map[string]any, matching []map[string]any) {
+	matching = make([]map[string]any, 0)
 	for _, d := range docs {
 		p := extractAndStripProfile(d)
 		switch {
@@ -86,17 +104,7 @@ func loadYamlFile(path string, profile string) (yamlLoadResult, error) {
 			matching = append(matching, d)
 		}
 	}
-
-	if base != nil {
-		flattenYaml("", base, &result)
-	}
-	for i, m := range matching {
-		if i > 0 {
-			log.Warn("duplicate profile '%s' block in %s, later overrides earlier", profile, path)
-		}
-		flattenYaml("", m, &result)
-	}
-	return result, nil
+	return
 }
 
 // extractAndStripProfile reads fatima.profile from the document, removes the key,
@@ -120,6 +128,32 @@ func extractAndStripProfile(doc map[string]any) string {
 		delete(doc, "fatima")
 	}
 	return profile
+}
+
+// flattenDoc flattens a single yaml document into a fresh yamlLoadResult.
+// Intra-document key conflicts (e.g. dot-notation key vs nested map) are logged as WARN.
+func flattenDoc(doc map[string]any) yamlLoadResult {
+	r := newYamlLoadResult()
+	flattenYaml("", doc, &r)
+	return r
+}
+
+// mergeFlattened merges src into dst. For each key in src whose value differs from
+// the existing value in dst, logs INFO with sourceLabel before overwriting.
+// Pass an empty sourceLabel when merging a base with no prior content (no overrides expected).
+func mergeFlattened(dst *yamlLoadResult, src yamlLoadResult, sourceLabel string) {
+	for k, v := range src.Values {
+		if existing, exists := dst.Values[k]; exists && existing != v && sourceLabel != "" {
+			log.Info("config key '%s' overridden by %s", k, sourceLabel)
+		}
+		dst.Values[k] = v
+	}
+	for k := range src.ListKeys {
+		dst.ListKeys[k] = true
+	}
+	for k := range src.SkippedKeys {
+		dst.SkippedKeys[k] = true
+	}
 }
 
 func flattenYaml(prefix string, in map[string]any, result *yamlLoadResult) {
