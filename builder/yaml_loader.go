@@ -144,7 +144,7 @@ func flattenDoc(doc map[string]any) yamlLoadResult {
 func mergeFlattened(dst *yamlLoadResult, src yamlLoadResult, sourceLabel string) {
 	for k, v := range src.Values {
 		if existing, exists := dst.Values[k]; exists && existing != v && sourceLabel != "" {
-			log.Info("config key '%s' overridden by %s (was '%s', now '%s')", k, sourceLabel, existing, v)
+			log.Info("config key '%s' overridden by %s", k, sourceLabel)
 		}
 		dst.Values[k] = v
 	}
