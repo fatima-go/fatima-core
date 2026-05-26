@@ -314,6 +314,45 @@ func TestLoadApplicationConfig(t *testing.T) {
 			profile: "qa",
 			want:    map[string]string{"key1": "base"},
 		},
+		// --- 신규: override 로깅 정리 검증 ---
+		{
+			name: "yaml_multidoc_same_value_override",
+			setup: func(dir string) {
+				// base와 profile의 값이 동일 → 결과값 회귀 방지
+				writeTestFile(t, dir, "application.yaml",
+					"port: 8080\n"+
+						"---\nfatima:\n  profile: dev\nport: 8080\n")
+			},
+			profile: "dev",
+			want:    map[string]string{"port": "8080"},
+		},
+		{
+			name: "yaml_separate_profile_file_override",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.yaml", "key1: base\nkey2: only_base\n")
+				writeTestFile(t, dir, "application.dev.yaml", "key1: overridden\n")
+			},
+			profile: "dev",
+			want:    map[string]string{"key1": "overridden", "key2": "only_base"},
+		},
+		{
+			name: "properties_separate_profile_file_override",
+			setup: func(dir string) {
+				writeTestFile(t, dir, "application.properties", "key1=base\nkey2=only_base\n")
+				writeTestFile(t, dir, "application.dev.properties", "key1=overridden\n")
+			},
+			profile: "dev",
+			want:    map[string]string{"key1": "overridden", "key2": "only_base"},
+		},
+		{
+			name: "properties_intra_file_duplicate_key",
+			setup: func(dir string) {
+				// 같은 파일 내 중복 키 → 마지막 값이 유지되는 기존 동작 회귀 방지
+				writeTestFile(t, dir, "application.properties", "foo=first\nfoo=second\nbar=baz\n")
+			},
+			profile: "",
+			want:    map[string]string{"foo": "second", "bar": "baz"},
+		},
 	}
 
 	for _, tt := range tests {

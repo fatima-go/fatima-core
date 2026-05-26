@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	log "github.com/fatima-go/fatima-log"
 )
 
 /**
@@ -73,7 +75,12 @@ func readProperties(path string) (map[string]string, error) {
 		if idx < 1 {
 			continue
 		}
-		resolved[strings.TrimSpace(line[:idx])] = strings.TrimSpace(line[idx+1:])
+		key := strings.TrimSpace(line[:idx])
+		val := strings.TrimSpace(line[idx+1:])
+		if existing, exists := resolved[key]; exists && existing != val {
+			log.Warn("properties key conflict at '%s' in %s, overwriting previous value", key, path)
+		}
+		resolved[key] = val
 	}
 
 	return resolved, nil
