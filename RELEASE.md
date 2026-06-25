@@ -1,5 +1,15 @@
 # release #
 
+## v1.3.3 ##
+- FatimaComponent 종료(Goaway/Shutdown) 순서화 및 graceful drain 지원
+  - 기존: 모든 컴포넌트를 타입 무관하게 동시 처리
+  - 변경: Goaway와 Shutdown 모두 데이터 흐름 기반 그룹 순차 처리 `READER → GENERAL → WRITER → PRE_INIT` (Initialize 순서 `PRE_INIT → WRITER → READER → GENERAL`의 단순 역순이 아님)
+    - ingress(READER)를 가장 먼저 내려, 종료 중인 파이프라인으로 신규 요청이 유입되는 것을 차단
+  - 그룹 내부는 병렬 유지, 그룹별 `componentGroupTimeout`(기본 4초)으로 hang된 컴포넌트가 전체 종료를 막지 않도록 가드
+  - 컴포넌트별 `recover`로 한 컴포넌트의 panic이 다른 컴포넌트 처리에 영향을 주지 않도록 격리
+  - `Goaway()`는 `FatimaRuntimeGoaway` 구현체 전체를 대상으로 하며(타입으로 참여 제한 없음), 타입은 처리 순서만 결정
+  - 주의: 위 순서화가 실제 graceful shutdown으로 이어지려면 READER 컴포넌트의 `Goaway()`/`Shutdown()`이 `신규 차단 → in-flight 완료 대기 → 반환` 계약을 구현해야 함
+
 ## v1.3.2 ##
 - config override 로깅 정리 및 base/profile flatten 구조 개선
   - **같은 파일/문서 내부 키 충돌** → `WARN` 유지
