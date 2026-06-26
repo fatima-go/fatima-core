@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/builder"
 	"github.com/fatima-go/fatima-core/lib"
 	"github.com/fatima-go/fatima-log"
 )
@@ -120,10 +121,64 @@ func bootupNotify() {
 	}
 }
 
-// componentGroupTimeout bounds how long a single lifecycle group (goaway or
-// shutdown) may take before the orchestrator stops waiting and proceeds to the
-// next group. This prevents a hung component from blocking the whole sequence.
-var componentGroupTimeout = 4 * time.Second
+// componentGroupTimeout is the fallback group timeout used when config is not
+// injected (e.g. tests or direct calls). It bounds how long a single lifecycle
+// group (goaway or shutdown) may take before the orchestrator stops waiting and
+// proceeds to the next group, preventing a hung component from blocking the whole
+// sequence. The effective value is normally resolved from config via
+// resolveGroupTimeout (gofatima.component.lifecycle.timeout.seconds) and may be
+// overridden per component through fatima.FatimaComponentLifecycleTimeout.
+var componentGroupTimeout = 30 * time.Second
+
+// resolveGroupTimeout reads the base (config-default) lifecycle group timeout from
+// config. It returns componentGroupTimeout (30s) when the key is missing, unparsable
+// or non-positive. This is the timeout applied to a group when no member component
+// declares its own via fatima.FatimaComponentLifecycleTimeout.
+func resolveGroupTimeout(config fatima.Config) time.Duration {
+	if config == nil {
+		return componentGroupTimeout
+	}
+	sec, err := config.GetInt(builder.GofatimaComponentLifecycleTimeoutSeconds)
+	if err != nil || sec <= 0 {
+		return componentGroupTimeout
+	}
+	return time.Duration(sec) * time.Second
+}
+
+// effectiveGroupTimeout computes the group's effective timeout as the maximum of
+// each member's effective timeout. A member declaring fatima.FatimaComponentLifecycleTimeout
+// with a positive value uses that value; otherwise it uses base (the config default).
+// Since members in a group run concurrently, waiting for the longest member lets the
+// whole group finish. An empty group falls back to base.
+//
+// Note base is the default for members that do NOT declare, not a global floor: a
+// group whose members all declare values below base waits only for the longest of
+// those declarations (per CR R2/R4). If any member is undeclared it contributes base,
+// so base still applies in the common mixed case.
+func effectiveGroupTimeout(components []fatima.FatimaComponent, base time.Duration) time.Duration {
+	if len(components) == 0 {
+		return base
+	}
+	var effective time.Duration
+	for _, c := range components {
+		if d := componentTimeout(c, base); d > effective {
+			effective = d
+		}
+	}
+	return effective
+}
+
+// componentTimeout returns the effective timeout a single component requests. It
+// honors fatima.FatimaComponentLifecycleTimeout when implemented with a positive
+// value, otherwise falls back to base.
+func componentTimeout(c interface{}, base time.Duration) time.Duration {
+	if lt, ok := c.(fatima.FatimaComponentLifecycleTimeout); ok {
+		if d := lt.LifecycleTimeout(); d > 0 {
+			return d
+		}
+	}
+	return base
+}
 
 // shutdownComponent shuts down registered FatimaComponent in data-flow order.
 //
@@ -135,10 +190,12 @@ var componentGroupTimeout = 4 * time.Second
 //	Shutdown : READER -> GENERAL -> WRITER -> PRE_INIT
 //
 // Members within a group run concurrently, but groups are sequential. Each group
-// is bounded by componentGroupTimeout. Note this ordering only yields a true
-// graceful shutdown when READER components honor the contract
+// is bounded by its effective timeout: the maximum of base (the config default,
+// gofatima.component.lifecycle.timeout.seconds) and any per-component override
+// declared via fatima.FatimaComponentLifecycleTimeout. Note this ordering only
+// yields a true graceful shutdown when READER components honor the contract
 // "stop accepting -> wait in-flight -> return" in their Shutdown().
-func shutdownComponent(program string) {
+func shutdownComponent(program string, base time.Duration) {
 	log.Info("start shutdown FatimaComponent")
 
 	defer func() {
@@ -150,22 +207,25 @@ func shutdownComponent(program string) {
 		}
 	}()
 
-	shutdownGroup("reader", compReader)
-	shutdownGroup("general", compGeneral)
-	shutdownGroup("writer", compWriter)
-	shutdownGroup("preinit", compPreInit)
+	shutdownGroup("reader", compReader, base)
+	shutdownGroup("general", compGeneral, base)
+	shutdownGroup("writer", compWriter, base)
+	shutdownGroup("preinit", compPreInit, base)
 
 	log.Warn("shutdown %s", program)
 	log.Close()
 }
 
 // shutdownGroup shuts down every component in a single type group concurrently and
-// waits up to componentGroupTimeout for completion. A panic in one component is
-// isolated and does not affect the others.
-func shutdownGroup(name string, list []fatima.FatimaComponent) {
+// waits up to the group's effective timeout for completion. The effective timeout is
+// max(base, per-component overrides). A panic in one component is isolated and does
+// not affect the others.
+func shutdownGroup(name string, list []fatima.FatimaComponent, base time.Duration) {
 	if len(list) == 0 {
 		return
 	}
+
+	timeout := effectiveGroupTimeout(list, base)
 
 	done := make(chan struct{})
 	go func() {
@@ -191,18 +251,18 @@ func shutdownGroup(name string, list []fatima.FatimaComponent) {
 	select {
 	case <-done:
 		log.Info("shutdown group [%s] %d component(s) done", name, len(list))
-	case <-time.After(componentGroupTimeout):
-		log.Warn("shutdown group [%s] timeout after %v, proceeding to next group", name, componentGroupTimeout)
+	case <-time.After(timeout):
+		log.Warn("shutdown group [%s] timeout after %v, proceeding to next group", name, timeout)
 	}
 }
 
 // goawayComponent broadcasts Goaway() to components that implement
 // FatimaRuntimeGoaway, in the same data-flow group order as shutdown
 // (READER -> GENERAL -> WRITER -> PRE_INIT). Members within a group run
-// concurrently; groups are sequential and bounded by componentGroupTimeout.
-// Type does not restrict participation: any component implementing the interface
-// is signaled, it only controls the order.
-func goawayComponent() {
+// concurrently; groups are sequential and bounded by the group's effective timeout
+// (max of base and per-component overrides). Type does not restrict participation:
+// any component implementing the interface is signaled, it only controls the order.
+func goawayComponent(base time.Duration) {
 	log.Info("start calling goaway...")
 
 	defer func() {
@@ -214,10 +274,10 @@ func goawayComponent() {
 	}()
 
 	count := 0
-	count += goawayGroup("reader", compReader)
-	count += goawayGroup("general", compGeneral)
-	count += goawayGroup("writer", compWriter)
-	count += goawayGroup("preinit", compPreInit)
+	count += goawayGroup("reader", compReader, base)
+	count += goawayGroup("general", compGeneral, base)
+	count += goawayGroup("writer", compWriter, base)
+	count += goawayGroup("preinit", compPreInit, base)
 
 	if count == 0 {
 		log.Debug("there are no goaway component")
@@ -227,14 +287,26 @@ func goawayComponent() {
 }
 
 // goawayGroup calls Goaway() on every component in a single type group that
-// implements FatimaRuntimeGoaway, concurrently, bounded by componentGroupTimeout.
-// It returns the number of goaway targets in the group. A panic in one component
-// is isolated and does not affect the others.
-func goawayGroup(name string, list []fatima.FatimaComponent) int {
+// implements FatimaRuntimeGoaway, concurrently, bounded by the group's effective
+// timeout. The effective timeout is max(base, per-component overrides) computed over
+// the goaway target set only (components not implementing FatimaRuntimeGoaway, and
+// thus not signaled, do not contribute their declared timeout). It returns the number
+// of goaway targets in the group. A panic in one component is isolated and does not
+// affect the others.
+func goawayGroup(name string, list []fatima.FatimaComponent, base time.Duration) int {
+	// Collect goaway targets and compute the group's effective timeout over that
+	// target set only, in a single pass. Components that do not implement
+	// FatimaRuntimeGoaway are not signaled and must not contribute their declared
+	// timeout (CR R4). target is non-empty past the guard below, so timeout is the
+	// max of the targets' effective timeouts (base for any undeclared target).
 	target := make([]fatima.FatimaRuntimeGoaway, 0)
+	var timeout time.Duration
 	for _, v := range list {
 		if comp, ok := v.(fatima.FatimaRuntimeGoaway); ok {
 			target = append(target, comp)
+			if d := componentTimeout(comp, base); d > timeout {
+				timeout = d
+			}
 		}
 	}
 	if len(target) == 0 {
@@ -265,8 +337,8 @@ func goawayGroup(name string, list []fatima.FatimaComponent) int {
 	select {
 	case <-done:
 		log.Info("goaway group [%s] %d component(s) done", name, len(target))
-	case <-time.After(componentGroupTimeout):
-		log.Warn("goaway group [%s] timeout after %v, proceeding to next group", name, componentGroupTimeout)
+	case <-time.After(timeout):
+		log.Warn("goaway group [%s] timeout after %v, proceeding to next group", name, timeout)
 	}
 	return len(target)
 }

@@ -20,6 +20,8 @@
 
 package fatima
 
+import "time"
+
 type FatimaComponentType int
 
 const (
@@ -41,4 +43,14 @@ type FatimaIOReader interface {
 
 type FatimaComponentTypeOrder interface {
 	GetType() FatimaComponentType
+}
+
+// FatimaComponentLifecycleTimeout is an optional interface a FatimaComponent may
+// implement to declare how long it needs during Goaway()/Shutdown() before the
+// orchestrator stops waiting for it. Components that do not implement it fall back
+// to the config default (gofatima.component.lifecycle.timeout.seconds, default 30s).
+// A non-positive return value is also treated as "not declared" and falls back to
+// the config default.
+type FatimaComponentLifecycleTimeout interface {
+	LifecycleTimeout() time.Duration
 }

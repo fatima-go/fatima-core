@@ -1,5 +1,16 @@
 # release #
 
+## v1.3.4 ##
+- 컴포넌트 생명주기(Goaway/Shutdown) 그룹 타임아웃 설정화 및 컴포넌트별 override 지원
+  - **기본 그룹 타임아웃 4초 → 30초 상향.** 4초를 초과하던 graceful drain(ALB health check 기반 goaway, Kafka rebalance/commit drain, in-flight flush 등)이 런타임 레벨에서 절단되던 문제 해소
+  - config 키 `gofatima.component.lifecycle.timeout.seconds`(초 단위 정수)로 기본 그룹 타임아웃 조정 가능. 미설정·0 이하·비정상 값이면 30초 폴백
+  - 컴포넌트가 옵셔널 인터페이스 `fatima.FatimaComponentLifecycleTimeout { LifecycleTimeout() time.Duration }`를 구현하면 자신의 타임아웃을 선언 가능. 0 이하 반환 시 config 기본값으로 폴백
+  - 그룹은 동시 실행이므로 그룹 effective timeout = `max(각 컴포넌트의 effective timeout)`. goaway는 `FatimaRuntimeGoaway` 타겟 집합 기준으로만 산정(비타겟 컴포넌트의 선언값은 무시)
+  - 정상 컴포넌트는 기존과 동일하게 `done` 우선이라 타임아웃과 무관하게 즉시 다음 그룹으로 진행. 타임아웃 발생 시에도 이후 그룹은 정상 진행("proceeding to next group")
+  - Goaway/Shutdown 양쪽에 동일 규칙 적용
+  - **주의(동작 변화):** 4s→30s 상향으로 hang(버그) 상태 컴포넌트의 종료가 느려질 수 있음(정상 컴포넌트는 영향 없음)
+  - **주의(플랫폼 grace period):** 그룹이 4개(`READER/GENERAL/WRITER/PRE_INIT`)이므로 최악 종료 예산은 `Σ(group_effective_timeout)`까지 늘 수 있음. k8s `terminationGracePeriodSeconds`(기본 30s)/juno 종료 유예를 초과하면 SIGKILL로 잘리므로, 플랫폼 유예에 맞춰 config·컴포넌트 선언값을 조정할 것
+
 ## v1.3.3 ##
 - FatimaComponent 종료(Goaway/Shutdown) 순서화 및 graceful drain 지원
   - 기존: 모든 컴포넌트를 타입 무관하게 동시 처리

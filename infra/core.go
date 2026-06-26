@@ -101,7 +101,8 @@ func (i *DefaultProcessInteractor) Initialize() bool {
 }
 
 func (i *DefaultProcessInteractor) Goaway() {
-	goawayComponent()
+	base := resolveGroupTimeout(i.runtimeProcess.GetConfig())
+	goawayComponent(base)
 }
 
 func (i *DefaultProcessInteractor) startListening() {
@@ -142,7 +143,8 @@ func (i *DefaultProcessInteractor) Shutdown() {
 		i.runtimeProcess.GetSystemNotifyHandler().SendAlarm(monitor.AlamLevelMajor, monitor.ActionProcessShutdown, message)
 	}
 	lib.StopCron()
-	shutdownComponent(i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName())
+	base := resolveGroupTimeout(i.runtimeProcess.GetConfig())
+	shutdownComponent(i.runtimeProcess.GetEnv().GetSystemProc().GetProgramName(), base)
 }
 
 func (i *DefaultProcessInteractor) RegisterMeasureUnit(unit monitor.SystemMeasurable) {

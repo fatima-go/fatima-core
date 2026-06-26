@@ -37,4 +37,10 @@ const (
 const (
 	GofatimaPropPprofAddress = "gofatima.pprof.address"    // e.g :6060, localhost:6060
 	GofatimaRedirectConsole  = "gofatima.redirect.console" // e.g true, false. default=true
+
+	// GofatimaComponentLifecycleTimeoutSeconds bounds, in seconds, how long a single
+	// lifecycle group (goaway or shutdown) may take before the orchestrator stops
+	// waiting and proceeds to the next group. A component may override this for itself
+	// via fatima.FatimaComponentLifecycleTimeout. Missing or <= 0 falls back to 30s.
+	GofatimaComponentLifecycleTimeoutSeconds = "gofatima.component.lifecycle.timeout.seconds" // default=30
 )
