@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/fatima-go/fatima-log v1.0.2
 	github.com/robfig/cron/v3 v3.0.1
+	github.com/soheilhy/cmux v0.1.5
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
