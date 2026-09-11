@@ -63,3 +63,13 @@ service ProcessRegistry {
  rpc Get(RegistryOperationQuery) returns (ControlOperation);
  rpc Watch(RegistryOperationQuery) returns (stream ControlOperation);
 }
+
+// level is one of error, warn, info, debug or trace; empty when unset.
+message LogLevelEntry { string process = 1; string group = 2; string level = 3; bool opm = 4; }
+message LogLevelCatalog { string package_id = 1; repeated LogLevelEntry entries = 2; }
+message LogLevelRequest { string process = 1; string level = 2; }
+// Juno updates the package loglevels file; each process applies it on its next one-second check.
+service LogLevelControl {
+ rpc List(Empty) returns (LogLevelCatalog);
+ rpc Set(LogLevelRequest) returns (LogLevelEntry);
+}

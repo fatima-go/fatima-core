@@ -1,5 +1,23 @@
 # release #
 
+## v1.3.5 ##
+- gRPC 기반 배포·운영 API 추가 (`opm` 패키지)
+  - `opm/api`: 서비스 정의 추가
+    - capability 조회(`Discovery`), 인증(`Identity`)
+    - 아티팩트(`Artifacts`), 점진 배포(`Deployments`, `PackageDeployment`)
+    - 패키지 라우팅·목록(`Routing`, `PackageInventory`)
+    - 운영 명령(`CronControl`, `ProcessControl`, `ProcessRegistry`)
+  - `opm/transport`: HTTP/gRPC 공용 transport. capability 조회로 서버의 신규 API 지원 여부를 판별하고, 지원하지 않는 서버는 legacy HTTP로 fallback할 수 있도록 `ErrLegacy`를 반환
+  - `opm/artifact`: 멀티 플랫폼 아티팩트 검증
+  - `opm/operations`, `opm/store`: 작업 진행 상황을 journal로 영속화
+    - 재접속(watch), request ID 기반 멱등 요청, 중단된 작업 복구 지원
+  - 기존 legacy HTTP 동작은 그대로 유지
+- `LogLevelControl` gRPC 서비스 추가 (`List`, `Set`)
+  - rolog가 프로세스별 로그레벨을 gRPC로 조회·변경
+  - 레벨은 `error`, `warn`, `info`, `debug`, `trace`만 허용
+  - juno가 요청을 검증한 뒤 package `loglevels` 파일을 갱신하고, 각 프로세스는 1초 주기 확인에서 이를 반영
+- 참고: `ipc` 패키지의 `TestCronExecuteOnyJobName`은 fatima 프로세스 환경 없이 실행하면 nil pointer로 실패함 (v1.3.4부터 동일, 이번 변경과 무관)
+
 ## v1.3.4 ##
 - 컴포넌트 생명주기(Goaway/Shutdown) 그룹 타임아웃 설정화 및 컴포넌트별 override 지원
   - **기본 그룹 타임아웃 4초 → 30초 상향.** 4초를 초과하던 graceful drain(ALB health check 기반 goaway, Kafka rebalance/commit drain, in-flight flush 등)이 런타임 레벨에서 절단되던 문제 해소

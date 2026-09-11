@@ -1230,6 +1230,179 @@ func (x *RegistryOperationQuery) GetId() string {
 	return ""
 }
 
+// level is one of error, warn, info, debug or trace; empty when unset.
+type LogLevelEntry struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Process       string                 `protobuf:"bytes,1,opt,name=process,proto3" json:"process,omitempty"`
+	Group         string                 `protobuf:"bytes,2,opt,name=group,proto3" json:"group,omitempty"`
+	Level         string                 `protobuf:"bytes,3,opt,name=level,proto3" json:"level,omitempty"`
+	Opm           bool                   `protobuf:"varint,4,opt,name=opm,proto3" json:"opm,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogLevelEntry) Reset() {
+	*x = LogLevelEntry{}
+	mi := &file_opm_api_operations_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogLevelEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogLevelEntry) ProtoMessage() {}
+
+func (x *LogLevelEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_opm_api_operations_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogLevelEntry.ProtoReflect.Descriptor instead.
+func (*LogLevelEntry) Descriptor() ([]byte, []int) {
+	return file_opm_api_operations_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *LogLevelEntry) GetProcess() string {
+	if x != nil {
+		return x.Process
+	}
+	return ""
+}
+
+func (x *LogLevelEntry) GetGroup() string {
+	if x != nil {
+		return x.Group
+	}
+	return ""
+}
+
+func (x *LogLevelEntry) GetLevel() string {
+	if x != nil {
+		return x.Level
+	}
+	return ""
+}
+
+func (x *LogLevelEntry) GetOpm() bool {
+	if x != nil {
+		return x.Opm
+	}
+	return false
+}
+
+type LogLevelCatalog struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PackageId     string                 `protobuf:"bytes,1,opt,name=package_id,json=packageId,proto3" json:"package_id,omitempty"`
+	Entries       []*LogLevelEntry       `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogLevelCatalog) Reset() {
+	*x = LogLevelCatalog{}
+	mi := &file_opm_api_operations_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogLevelCatalog) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogLevelCatalog) ProtoMessage() {}
+
+func (x *LogLevelCatalog) ProtoReflect() protoreflect.Message {
+	mi := &file_opm_api_operations_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogLevelCatalog.ProtoReflect.Descriptor instead.
+func (*LogLevelCatalog) Descriptor() ([]byte, []int) {
+	return file_opm_api_operations_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *LogLevelCatalog) GetPackageId() string {
+	if x != nil {
+		return x.PackageId
+	}
+	return ""
+}
+
+func (x *LogLevelCatalog) GetEntries() []*LogLevelEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+type LogLevelRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Process       string                 `protobuf:"bytes,1,opt,name=process,proto3" json:"process,omitempty"`
+	Level         string                 `protobuf:"bytes,2,opt,name=level,proto3" json:"level,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogLevelRequest) Reset() {
+	*x = LogLevelRequest{}
+	mi := &file_opm_api_operations_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogLevelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogLevelRequest) ProtoMessage() {}
+
+func (x *LogLevelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_opm_api_operations_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogLevelRequest.ProtoReflect.Descriptor instead.
+func (*LogLevelRequest) Descriptor() ([]byte, []int) {
+	return file_opm_api_operations_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *LogLevelRequest) GetProcess() string {
+	if x != nil {
+		return x.Process
+	}
+	return ""
+}
+
+func (x *LogLevelRequest) GetLevel() string {
+	if x != nil {
+		return x.Level
+	}
+	return ""
+}
+
 var File_opm_api_operations_proto protoreflect.FileDescriptor
 
 const file_opm_api_operations_proto_rawDesc = "" +
@@ -1339,7 +1512,19 @@ const file_opm_api_operations_proto_rawDesc = "" +
 	"\x16RegistryOperationQuery\x12\x1d\n" +
 	"\n" +
 	"package_id\x18\x01 \x01(\tR\tpackageId\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\tR\x02id2H\n" +
+	"\x02id\x18\x02 \x01(\tR\x02id\"g\n" +
+	"\rLogLevelEntry\x12\x18\n" +
+	"\aprocess\x18\x01 \x01(\tR\aprocess\x12\x14\n" +
+	"\x05group\x18\x02 \x01(\tR\x05group\x12\x14\n" +
+	"\x05level\x18\x03 \x01(\tR\x05level\x12\x10\n" +
+	"\x03opm\x18\x04 \x01(\bR\x03opm\"h\n" +
+	"\x0fLogLevelCatalog\x12\x1d\n" +
+	"\n" +
+	"package_id\x18\x01 \x01(\tR\tpackageId\x126\n" +
+	"\aentries\x18\x02 \x03(\v2\x1c.fatima.opm.v2.LogLevelEntryR\aentries\"A\n" +
+	"\x0fLogLevelRequest\x12\x18\n" +
+	"\aprocess\x18\x01 \x01(\tR\aprocess\x12\x14\n" +
+	"\x05level\x18\x02 \x01(\tR\x05level2H\n" +
 	"\aRouting\x12=\n" +
 	"\aResolve\x12\x1b.fatima.opm.v2.PackageQuery\x1a\x15.fatima.opm.v2.Target2\x8f\x01\n" +
 	"\x10PackageInventory\x12;\n" +
@@ -1362,7 +1547,10 @@ const file_opm_api_operations_proto_rawDesc = "" +
 	"\aPreview\x12\x1e.fatima.opm.v2.RegistryRequest\x1a\x1b.fatima.opm.v2.RegistryPlan\x12H\n" +
 	"\x05Apply\x12\x1e.fatima.opm.v2.RegistryRequest\x1a\x1f.fatima.opm.v2.ControlOperation\x12M\n" +
 	"\x03Get\x12%.fatima.opm.v2.RegistryOperationQuery\x1a\x1f.fatima.opm.v2.ControlOperation\x12Q\n" +
-	"\x05Watch\x12%.fatima.opm.v2.RegistryOperationQuery\x1a\x1f.fatima.opm.v2.ControlOperation0\x01B.Z,github.com/fatima-go/fatima-core/opm/api;apib\x06proto3"
+	"\x05Watch\x12%.fatima.opm.v2.RegistryOperationQuery\x1a\x1f.fatima.opm.v2.ControlOperation0\x012\x94\x01\n" +
+	"\x0fLogLevelControl\x12<\n" +
+	"\x04List\x12\x14.fatima.opm.v2.Empty\x1a\x1e.fatima.opm.v2.LogLevelCatalog\x12C\n" +
+	"\x03Set\x12\x1e.fatima.opm.v2.LogLevelRequest\x1a\x1c.fatima.opm.v2.LogLevelEntryB.Z,github.com/fatima-go/fatima-core/opm/api;apib\x06proto3"
 
 var (
 	file_opm_api_operations_proto_rawDescOnce sync.Once
@@ -1376,7 +1564,7 @@ func file_opm_api_operations_proto_rawDescGZIP() []byte {
 	return file_opm_api_operations_proto_rawDescData
 }
 
-var file_opm_api_operations_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_opm_api_operations_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_opm_api_operations_proto_goTypes = []any{
 	(*PackageQuery)(nil),           // 0: fatima.opm.v2.PackageQuery
 	(*PackageEntry)(nil),           // 1: fatima.opm.v2.PackageEntry
@@ -1396,63 +1584,71 @@ var file_opm_api_operations_proto_goTypes = []any{
 	(*RegistryRequest)(nil),        // 15: fatima.opm.v2.RegistryRequest
 	(*RegistryPlan)(nil),           // 16: fatima.opm.v2.RegistryPlan
 	(*RegistryOperationQuery)(nil), // 17: fatima.opm.v2.RegistryOperationQuery
-	(*Target)(nil),                 // 18: fatima.opm.v2.Target
-	(*Event)(nil),                  // 19: fatima.opm.v2.Event
-	(*Empty)(nil),                  // 20: fatima.opm.v2.Empty
-	(*OperationQuery)(nil),         // 21: fatima.opm.v2.OperationQuery
+	(*LogLevelEntry)(nil),          // 18: fatima.opm.v2.LogLevelEntry
+	(*LogLevelCatalog)(nil),        // 19: fatima.opm.v2.LogLevelCatalog
+	(*LogLevelRequest)(nil),        // 20: fatima.opm.v2.LogLevelRequest
+	(*Target)(nil),                 // 21: fatima.opm.v2.Target
+	(*Event)(nil),                  // 22: fatima.opm.v2.Event
+	(*Empty)(nil),                  // 23: fatima.opm.v2.Empty
+	(*OperationQuery)(nil),         // 24: fatima.opm.v2.OperationQuery
 }
 var file_opm_api_operations_proto_depIdxs = []int32{
-	18, // 0: fatima.opm.v2.PackageEntry.target:type_name -> fatima.opm.v2.Target
+	21, // 0: fatima.opm.v2.PackageEntry.target:type_name -> fatima.opm.v2.Target
 	1,  // 1: fatima.opm.v2.PackageCatalog.packages:type_name -> fatima.opm.v2.PackageEntry
 	3,  // 2: fatima.opm.v2.CronHour.jobs:type_name -> fatima.opm.v2.CronEntry
 	3,  // 3: fatima.opm.v2.CronCatalog.jobs:type_name -> fatima.opm.v2.CronEntry
 	4,  // 4: fatima.opm.v2.CronCatalog.hours:type_name -> fatima.opm.v2.CronHour
-	19, // 5: fatima.opm.v2.ControlOperation.events:type_name -> fatima.opm.v2.Event
+	22, // 5: fatima.opm.v2.ControlOperation.events:type_name -> fatima.opm.v2.Event
 	9,  // 6: fatima.opm.v2.ProcessCatalog.processes:type_name -> fatima.opm.v2.ProcessEntry
 	10, // 7: fatima.opm.v2.RegistryCatalog.catalog:type_name -> fatima.opm.v2.ProcessCatalog
 	13, // 8: fatima.opm.v2.RegistryCatalog.groups:type_name -> fatima.opm.v2.ProcessGroup
 	15, // 9: fatima.opm.v2.RegistryPlan.request:type_name -> fatima.opm.v2.RegistryRequest
-	0,  // 10: fatima.opm.v2.Routing.Resolve:input_type -> fatima.opm.v2.PackageQuery
-	20, // 11: fatima.opm.v2.PackageInventory.List:input_type -> fatima.opm.v2.Empty
-	20, // 12: fatima.opm.v2.PackageInventory.Watch:input_type -> fatima.opm.v2.Empty
-	20, // 13: fatima.opm.v2.CronControl.List:input_type -> fatima.opm.v2.Empty
-	6,  // 14: fatima.opm.v2.CronControl.Rerun:input_type -> fatima.opm.v2.CronRequest
-	21, // 15: fatima.opm.v2.CronControl.Get:input_type -> fatima.opm.v2.OperationQuery
-	21, // 16: fatima.opm.v2.CronControl.Watch:input_type -> fatima.opm.v2.OperationQuery
-	8,  // 17: fatima.opm.v2.ProcessControl.Catalog:input_type -> fatima.opm.v2.ProcessQuery
-	8,  // 18: fatima.opm.v2.ProcessControl.WatchCatalog:input_type -> fatima.opm.v2.ProcessQuery
-	11, // 19: fatima.opm.v2.ProcessControl.Stop:input_type -> fatima.opm.v2.ProcessRequest
-	11, // 20: fatima.opm.v2.ProcessControl.Start:input_type -> fatima.opm.v2.ProcessRequest
-	21, // 21: fatima.opm.v2.ProcessControl.Get:input_type -> fatima.opm.v2.OperationQuery
-	21, // 22: fatima.opm.v2.ProcessControl.Watch:input_type -> fatima.opm.v2.OperationQuery
-	12, // 23: fatima.opm.v2.ProcessRegistry.Catalog:input_type -> fatima.opm.v2.RegistryQuery
-	15, // 24: fatima.opm.v2.ProcessRegistry.Preview:input_type -> fatima.opm.v2.RegistryRequest
-	15, // 25: fatima.opm.v2.ProcessRegistry.Apply:input_type -> fatima.opm.v2.RegistryRequest
-	17, // 26: fatima.opm.v2.ProcessRegistry.Get:input_type -> fatima.opm.v2.RegistryOperationQuery
-	17, // 27: fatima.opm.v2.ProcessRegistry.Watch:input_type -> fatima.opm.v2.RegistryOperationQuery
-	18, // 28: fatima.opm.v2.Routing.Resolve:output_type -> fatima.opm.v2.Target
-	2,  // 29: fatima.opm.v2.PackageInventory.List:output_type -> fatima.opm.v2.PackageCatalog
-	2,  // 30: fatima.opm.v2.PackageInventory.Watch:output_type -> fatima.opm.v2.PackageCatalog
-	5,  // 31: fatima.opm.v2.CronControl.List:output_type -> fatima.opm.v2.CronCatalog
-	7,  // 32: fatima.opm.v2.CronControl.Rerun:output_type -> fatima.opm.v2.ControlOperation
-	7,  // 33: fatima.opm.v2.CronControl.Get:output_type -> fatima.opm.v2.ControlOperation
-	7,  // 34: fatima.opm.v2.CronControl.Watch:output_type -> fatima.opm.v2.ControlOperation
-	10, // 35: fatima.opm.v2.ProcessControl.Catalog:output_type -> fatima.opm.v2.ProcessCatalog
-	10, // 36: fatima.opm.v2.ProcessControl.WatchCatalog:output_type -> fatima.opm.v2.ProcessCatalog
-	7,  // 37: fatima.opm.v2.ProcessControl.Stop:output_type -> fatima.opm.v2.ControlOperation
-	7,  // 38: fatima.opm.v2.ProcessControl.Start:output_type -> fatima.opm.v2.ControlOperation
-	7,  // 39: fatima.opm.v2.ProcessControl.Get:output_type -> fatima.opm.v2.ControlOperation
-	7,  // 40: fatima.opm.v2.ProcessControl.Watch:output_type -> fatima.opm.v2.ControlOperation
-	14, // 41: fatima.opm.v2.ProcessRegistry.Catalog:output_type -> fatima.opm.v2.RegistryCatalog
-	16, // 42: fatima.opm.v2.ProcessRegistry.Preview:output_type -> fatima.opm.v2.RegistryPlan
-	7,  // 43: fatima.opm.v2.ProcessRegistry.Apply:output_type -> fatima.opm.v2.ControlOperation
-	7,  // 44: fatima.opm.v2.ProcessRegistry.Get:output_type -> fatima.opm.v2.ControlOperation
-	7,  // 45: fatima.opm.v2.ProcessRegistry.Watch:output_type -> fatima.opm.v2.ControlOperation
-	28, // [28:46] is the sub-list for method output_type
-	10, // [10:28] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	18, // 10: fatima.opm.v2.LogLevelCatalog.entries:type_name -> fatima.opm.v2.LogLevelEntry
+	0,  // 11: fatima.opm.v2.Routing.Resolve:input_type -> fatima.opm.v2.PackageQuery
+	23, // 12: fatima.opm.v2.PackageInventory.List:input_type -> fatima.opm.v2.Empty
+	23, // 13: fatima.opm.v2.PackageInventory.Watch:input_type -> fatima.opm.v2.Empty
+	23, // 14: fatima.opm.v2.CronControl.List:input_type -> fatima.opm.v2.Empty
+	6,  // 15: fatima.opm.v2.CronControl.Rerun:input_type -> fatima.opm.v2.CronRequest
+	24, // 16: fatima.opm.v2.CronControl.Get:input_type -> fatima.opm.v2.OperationQuery
+	24, // 17: fatima.opm.v2.CronControl.Watch:input_type -> fatima.opm.v2.OperationQuery
+	8,  // 18: fatima.opm.v2.ProcessControl.Catalog:input_type -> fatima.opm.v2.ProcessQuery
+	8,  // 19: fatima.opm.v2.ProcessControl.WatchCatalog:input_type -> fatima.opm.v2.ProcessQuery
+	11, // 20: fatima.opm.v2.ProcessControl.Stop:input_type -> fatima.opm.v2.ProcessRequest
+	11, // 21: fatima.opm.v2.ProcessControl.Start:input_type -> fatima.opm.v2.ProcessRequest
+	24, // 22: fatima.opm.v2.ProcessControl.Get:input_type -> fatima.opm.v2.OperationQuery
+	24, // 23: fatima.opm.v2.ProcessControl.Watch:input_type -> fatima.opm.v2.OperationQuery
+	12, // 24: fatima.opm.v2.ProcessRegistry.Catalog:input_type -> fatima.opm.v2.RegistryQuery
+	15, // 25: fatima.opm.v2.ProcessRegistry.Preview:input_type -> fatima.opm.v2.RegistryRequest
+	15, // 26: fatima.opm.v2.ProcessRegistry.Apply:input_type -> fatima.opm.v2.RegistryRequest
+	17, // 27: fatima.opm.v2.ProcessRegistry.Get:input_type -> fatima.opm.v2.RegistryOperationQuery
+	17, // 28: fatima.opm.v2.ProcessRegistry.Watch:input_type -> fatima.opm.v2.RegistryOperationQuery
+	23, // 29: fatima.opm.v2.LogLevelControl.List:input_type -> fatima.opm.v2.Empty
+	20, // 30: fatima.opm.v2.LogLevelControl.Set:input_type -> fatima.opm.v2.LogLevelRequest
+	21, // 31: fatima.opm.v2.Routing.Resolve:output_type -> fatima.opm.v2.Target
+	2,  // 32: fatima.opm.v2.PackageInventory.List:output_type -> fatima.opm.v2.PackageCatalog
+	2,  // 33: fatima.opm.v2.PackageInventory.Watch:output_type -> fatima.opm.v2.PackageCatalog
+	5,  // 34: fatima.opm.v2.CronControl.List:output_type -> fatima.opm.v2.CronCatalog
+	7,  // 35: fatima.opm.v2.CronControl.Rerun:output_type -> fatima.opm.v2.ControlOperation
+	7,  // 36: fatima.opm.v2.CronControl.Get:output_type -> fatima.opm.v2.ControlOperation
+	7,  // 37: fatima.opm.v2.CronControl.Watch:output_type -> fatima.opm.v2.ControlOperation
+	10, // 38: fatima.opm.v2.ProcessControl.Catalog:output_type -> fatima.opm.v2.ProcessCatalog
+	10, // 39: fatima.opm.v2.ProcessControl.WatchCatalog:output_type -> fatima.opm.v2.ProcessCatalog
+	7,  // 40: fatima.opm.v2.ProcessControl.Stop:output_type -> fatima.opm.v2.ControlOperation
+	7,  // 41: fatima.opm.v2.ProcessControl.Start:output_type -> fatima.opm.v2.ControlOperation
+	7,  // 42: fatima.opm.v2.ProcessControl.Get:output_type -> fatima.opm.v2.ControlOperation
+	7,  // 43: fatima.opm.v2.ProcessControl.Watch:output_type -> fatima.opm.v2.ControlOperation
+	14, // 44: fatima.opm.v2.ProcessRegistry.Catalog:output_type -> fatima.opm.v2.RegistryCatalog
+	16, // 45: fatima.opm.v2.ProcessRegistry.Preview:output_type -> fatima.opm.v2.RegistryPlan
+	7,  // 46: fatima.opm.v2.ProcessRegistry.Apply:output_type -> fatima.opm.v2.ControlOperation
+	7,  // 47: fatima.opm.v2.ProcessRegistry.Get:output_type -> fatima.opm.v2.ControlOperation
+	7,  // 48: fatima.opm.v2.ProcessRegistry.Watch:output_type -> fatima.opm.v2.ControlOperation
+	19, // 49: fatima.opm.v2.LogLevelControl.List:output_type -> fatima.opm.v2.LogLevelCatalog
+	18, // 50: fatima.opm.v2.LogLevelControl.Set:output_type -> fatima.opm.v2.LogLevelEntry
+	31, // [31:51] is the sub-list for method output_type
+	11, // [11:31] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_opm_api_operations_proto_init() }
@@ -1467,9 +1663,9 @@ func file_opm_api_operations_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_opm_api_operations_proto_rawDesc), len(file_opm_api_operations_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   21,
 			NumExtensions: 0,
-			NumServices:   5,
+			NumServices:   6,
 		},
 		GoTypes:           file_opm_api_operations_proto_goTypes,
 		DependencyIndexes: file_opm_api_operations_proto_depIdxs,

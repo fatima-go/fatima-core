@@ -1044,3 +1044,147 @@ var ProcessRegistry_ServiceDesc = grpc.ServiceDesc{
 	},
 	Metadata: "opm/api/operations.proto",
 }
+
+const (
+	LogLevelControl_List_FullMethodName = "/fatima.opm.v2.LogLevelControl/List"
+	LogLevelControl_Set_FullMethodName  = "/fatima.opm.v2.LogLevelControl/Set"
+)
+
+// LogLevelControlClient is the client API for LogLevelControl service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// Juno updates the package loglevels file; each process applies it on its next one-second check.
+type LogLevelControlClient interface {
+	List(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*LogLevelCatalog, error)
+	Set(ctx context.Context, in *LogLevelRequest, opts ...grpc.CallOption) (*LogLevelEntry, error)
+}
+
+type logLevelControlClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewLogLevelControlClient(cc grpc.ClientConnInterface) LogLevelControlClient {
+	return &logLevelControlClient{cc}
+}
+
+func (c *logLevelControlClient) List(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*LogLevelCatalog, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LogLevelCatalog)
+	err := c.cc.Invoke(ctx, LogLevelControl_List_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *logLevelControlClient) Set(ctx context.Context, in *LogLevelRequest, opts ...grpc.CallOption) (*LogLevelEntry, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LogLevelEntry)
+	err := c.cc.Invoke(ctx, LogLevelControl_Set_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// LogLevelControlServer is the server API for LogLevelControl service.
+// All implementations must embed UnimplementedLogLevelControlServer
+// for forward compatibility.
+//
+// Juno updates the package loglevels file; each process applies it on its next one-second check.
+type LogLevelControlServer interface {
+	List(context.Context, *Empty) (*LogLevelCatalog, error)
+	Set(context.Context, *LogLevelRequest) (*LogLevelEntry, error)
+	mustEmbedUnimplementedLogLevelControlServer()
+}
+
+// UnimplementedLogLevelControlServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedLogLevelControlServer struct{}
+
+func (UnimplementedLogLevelControlServer) List(context.Context, *Empty) (*LogLevelCatalog, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+func (UnimplementedLogLevelControlServer) Set(context.Context, *LogLevelRequest) (*LogLevelEntry, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
+}
+func (UnimplementedLogLevelControlServer) mustEmbedUnimplementedLogLevelControlServer() {}
+func (UnimplementedLogLevelControlServer) testEmbeddedByValue()                         {}
+
+// UnsafeLogLevelControlServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to LogLevelControlServer will
+// result in compilation errors.
+type UnsafeLogLevelControlServer interface {
+	mustEmbedUnimplementedLogLevelControlServer()
+}
+
+func RegisterLogLevelControlServer(s grpc.ServiceRegistrar, srv LogLevelControlServer) {
+	// If the following call pancis, it indicates UnimplementedLogLevelControlServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&LogLevelControl_ServiceDesc, srv)
+}
+
+func _LogLevelControl_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LogLevelControlServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LogLevelControl_List_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LogLevelControlServer).List(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LogLevelControl_Set_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogLevelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LogLevelControlServer).Set(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LogLevelControl_Set_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LogLevelControlServer).Set(ctx, req.(*LogLevelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// LogLevelControl_ServiceDesc is the grpc.ServiceDesc for LogLevelControl service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var LogLevelControl_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "fatima.opm.v2.LogLevelControl",
+	HandlerType: (*LogLevelControlServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "List",
+			Handler:    _LogLevelControl_List_Handler,
+		},
+		{
+			MethodName: "Set",
+			Handler:    _LogLevelControl_Set_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "opm/api/operations.proto",
+}
