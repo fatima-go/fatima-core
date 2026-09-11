@@ -1188,3 +1188,111 @@ var LogLevelControl_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "opm/api/operations.proto",
 }
+
+const (
+	DeploymentHistory_List_FullMethodName = "/fatima.opm.v2.DeploymentHistory/List"
+)
+
+// DeploymentHistoryClient is the client API for DeploymentHistory service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// Juno reads the history it keeps per process at each deployment, newest first.
+// An empty process lists every registered process.
+type DeploymentHistoryClient interface {
+	List(ctx context.Context, in *HistoryQuery, opts ...grpc.CallOption) (*HistoryList, error)
+}
+
+type deploymentHistoryClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewDeploymentHistoryClient(cc grpc.ClientConnInterface) DeploymentHistoryClient {
+	return &deploymentHistoryClient{cc}
+}
+
+func (c *deploymentHistoryClient) List(ctx context.Context, in *HistoryQuery, opts ...grpc.CallOption) (*HistoryList, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(HistoryList)
+	err := c.cc.Invoke(ctx, DeploymentHistory_List_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// DeploymentHistoryServer is the server API for DeploymentHistory service.
+// All implementations must embed UnimplementedDeploymentHistoryServer
+// for forward compatibility.
+//
+// Juno reads the history it keeps per process at each deployment, newest first.
+// An empty process lists every registered process.
+type DeploymentHistoryServer interface {
+	List(context.Context, *HistoryQuery) (*HistoryList, error)
+	mustEmbedUnimplementedDeploymentHistoryServer()
+}
+
+// UnimplementedDeploymentHistoryServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedDeploymentHistoryServer struct{}
+
+func (UnimplementedDeploymentHistoryServer) List(context.Context, *HistoryQuery) (*HistoryList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+func (UnimplementedDeploymentHistoryServer) mustEmbedUnimplementedDeploymentHistoryServer() {}
+func (UnimplementedDeploymentHistoryServer) testEmbeddedByValue()                           {}
+
+// UnsafeDeploymentHistoryServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DeploymentHistoryServer will
+// result in compilation errors.
+type UnsafeDeploymentHistoryServer interface {
+	mustEmbedUnimplementedDeploymentHistoryServer()
+}
+
+func RegisterDeploymentHistoryServer(s grpc.ServiceRegistrar, srv DeploymentHistoryServer) {
+	// If the following call pancis, it indicates UnimplementedDeploymentHistoryServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&DeploymentHistory_ServiceDesc, srv)
+}
+
+func _DeploymentHistory_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HistoryQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeploymentHistoryServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeploymentHistory_List_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeploymentHistoryServer).List(ctx, req.(*HistoryQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// DeploymentHistory_ServiceDesc is the grpc.ServiceDesc for DeploymentHistory service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DeploymentHistory_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "fatima.opm.v2.DeploymentHistory",
+	HandlerType: (*DeploymentHistoryServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "List",
+			Handler:    _DeploymentHistory_List_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "opm/api/operations.proto",
+}

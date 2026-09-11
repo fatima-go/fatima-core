@@ -73,3 +73,14 @@ service LogLevelControl {
  rpc List(Empty) returns (LogLevelCatalog);
  rpc Set(LogLevelRequest) returns (LogLevelEntry);
 }
+
+// deployed_at is Unix time in milliseconds; build fields come from the artifact's deployment.json.
+message DeploymentRecord {
+ string process = 1; string group = 2; int64 deployed_at = 3; string build_user = 4;
+ string build_time = 5; string git_branch = 6; string git_commit = 7; string git_message = 8;
+}
+message HistoryQuery { string process = 1; }
+message HistoryList { string package_id = 1; repeated DeploymentRecord records = 2; }
+// Juno reads the history it keeps per process at each deployment, newest first.
+// An empty process lists every registered process.
+service DeploymentHistory { rpc List(HistoryQuery) returns (HistoryList); }

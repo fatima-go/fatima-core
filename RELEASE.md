@@ -1,5 +1,12 @@
 # release #
 
+## v1.3.6 ##
+- `DeploymentHistory` gRPC 서비스 추가 (`List`)
+  - rohis가 프로세스별 배포 이력을 gRPC로 조회
+  - 레코드: 프로세스, 그룹, 배포 시각(ms), 빌드 사용자·시각, git 브랜치·커밋·메시지
+    - artifact에 포함된 `deployment.json`에서 추출
+  - 프로세스를 지정하지 않으면 등록된 전체 프로세스의 이력을 최신순으로 반환
+
 ## v1.3.5 ##
 - gRPC 기반 배포·운영 API 추가 (`opm` 패키지)
   - `opm/api`: 서비스 정의 추가
