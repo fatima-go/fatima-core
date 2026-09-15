@@ -30,3 +30,5 @@ Coordinated source builds use the sibling fatima-core checkout until a release o
 this API is published. Generate bindings from the repository root:
 
     protoc -I . --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. opm/api/control.proto
+
+Rollout.next_target_start_at is the persisted next-target start deadline in Unix milliseconds (0 means no scheduled gap). It is independent of next_check_at, which is for reconciliation.

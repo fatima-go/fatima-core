@@ -29,7 +29,8 @@ message WatchRequest { string id = 1; uint64 after_revision = 2; }
 message Event { uint64 sequence = 1; int64 at = 2; string stage = 3; string state = 4; string message = 5; int64 current = 6; int64 total = 7; }
 message Operation { string id = 1; string artifact_id = 2; string sha256 = 3; string process = 4; string package_id = 5; string state = 6; repeated Event events = 7; string error = 8; int64 started_at = 9; int64 finished_at = 10; string revision_path = 11; string previous_revision = 12; }
 message TargetRun { Target target = 1; Operation operation = 2; int64 sent_bytes = 3; int64 total_bytes = 4; repeated Operation previous_attempts = 5; }
-message Rollout { string id = 1; Artifact artifact = 2; string group = 3; repeated TargetRun targets = 4; string state = 5; string created_by = 6; int64 created_at = 7; uint64 revision = 8; string message = 9; bool remaining_approved = 10; bool cancel_requested = 11; string management_session_id = 12; string end_reason = 13; int64 last_checked_at = 14; int64 next_check_at = 15; bool blocks_deployment = 16; }
+message Rollout { string id = 1; Artifact artifact = 2; string group = 3; repeated TargetRun targets = 4; string state = 5; string created_by = 6; int64 created_at = 7; uint64 revision = 8; string message = 9; bool remaining_approved = 10; bool cancel_requested = 11; string management_session_id = 12; string end_reason = 13; int64 last_checked_at = 14; int64 next_check_at = 15; bool blocks_deployment = 16; int64 next_target_start_at = 17; // Unix milliseconds; zero when no inter-target wait is scheduled.
+ }
 // Management belongs to the creating CLI, never to a Watch stream. Times are Unix milliseconds.
 message ManagementCredential { string id = 1; string token = 2; }
 message ManagementSession { string id = 1; string token = 2; int64 last_seen_at = 3; int64 expires_at = 4; string rollout_id = 5; string state = 6; }

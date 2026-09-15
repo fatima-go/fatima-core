@@ -1467,6 +1467,7 @@ type Rollout struct {
 	LastCheckedAt       int64                  `protobuf:"varint,14,opt,name=last_checked_at,json=lastCheckedAt,proto3" json:"last_checked_at,omitempty"`
 	NextCheckAt         int64                  `protobuf:"varint,15,opt,name=next_check_at,json=nextCheckAt,proto3" json:"next_check_at,omitempty"`
 	BlocksDeployment    bool                   `protobuf:"varint,16,opt,name=blocks_deployment,json=blocksDeployment,proto3" json:"blocks_deployment,omitempty"`
+	NextTargetStartAt   int64                  `protobuf:"varint,17,opt,name=next_target_start_at,json=nextTargetStartAt,proto3" json:"next_target_start_at,omitempty"` // Unix milliseconds; zero when no inter-target wait is scheduled.
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -1611,6 +1612,13 @@ func (x *Rollout) GetBlocksDeployment() bool {
 		return x.BlocksDeployment
 	}
 	return false
+}
+
+func (x *Rollout) GetNextTargetStartAt() int64 {
+	if x != nil {
+		return x.NextTargetStartAt
+	}
+	return 0
 }
 
 // Management belongs to the creating CLI, never to a Watch stream. Times are Unix milliseconds.
@@ -2133,7 +2141,7 @@ const file_opm_api_control_proto_rawDesc = "" +
 	"sent_bytes\x18\x03 \x01(\x03R\tsentBytes\x12\x1f\n" +
 	"\vtotal_bytes\x18\x04 \x01(\x03R\n" +
 	"totalBytes\x12E\n" +
-	"\x11previous_attempts\x18\x05 \x03(\v2\x18.fatima.opm.v2.OperationR\x10previousAttempts\"\xc8\x04\n" +
+	"\x11previous_attempts\x18\x05 \x03(\v2\x18.fatima.opm.v2.OperationR\x10previousAttempts\"\xf9\x04\n" +
 	"\aRollout\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x123\n" +
 	"\bartifact\x18\x02 \x01(\v2\x17.fatima.opm.v2.ArtifactR\bartifact\x12\x14\n" +
@@ -2154,7 +2162,8 @@ const file_opm_api_control_proto_rawDesc = "" +
 	"end_reason\x18\r \x01(\tR\tendReason\x12&\n" +
 	"\x0flast_checked_at\x18\x0e \x01(\x03R\rlastCheckedAt\x12\"\n" +
 	"\rnext_check_at\x18\x0f \x01(\x03R\vnextCheckAt\x12+\n" +
-	"\x11blocks_deployment\x18\x10 \x01(\bR\x10blocksDeployment\"<\n" +
+	"\x11blocks_deployment\x18\x10 \x01(\bR\x10blocksDeployment\x12/\n" +
+	"\x14next_target_start_at\x18\x11 \x01(\x03R\x11nextTargetStartAt\"<\n" +
 	"\x14ManagementCredential\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\tR\x05token\"\xaf\x01\n" +
