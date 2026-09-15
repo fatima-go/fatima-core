@@ -678,16 +678,17 @@ func (x *ArtifactList) GetArtifacts() []*Artifact {
 }
 
 type Target struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PackageId     string                 `protobuf:"bytes,1,opt,name=package_id,json=packageId,proto3" json:"package_id,omitempty"`
-	Group         string                 `protobuf:"bytes,2,opt,name=group,proto3" json:"group,omitempty"`
-	Endpoint      string                 `protobuf:"bytes,3,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
-	Platform      string                 `protobuf:"bytes,4,opt,name=platform,proto3" json:"platform,omitempty"`
-	Supported     bool                   `protobuf:"varint,5,opt,name=supported,proto3" json:"supported,omitempty"`
-	Reason        string                 `protobuf:"bytes,6,opt,name=reason,proto3" json:"reason,omitempty"`
-	Legacy        bool                   `protobuf:"varint,7,opt,name=legacy,proto3" json:"legacy,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	PackageId       string                 `protobuf:"bytes,1,opt,name=package_id,json=packageId,proto3" json:"package_id,omitempty"`
+	Group           string                 `protobuf:"bytes,2,opt,name=group,proto3" json:"group,omitempty"`
+	Endpoint        string                 `protobuf:"bytes,3,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	Platform        string                 `protobuf:"bytes,4,opt,name=platform,proto3" json:"platform,omitempty"`
+	Supported       bool                   `protobuf:"varint,5,opt,name=supported,proto3" json:"supported,omitempty"`
+	Reason          string                 `protobuf:"bytes,6,opt,name=reason,proto3" json:"reason,omitempty"`
+	Legacy          bool                   `protobuf:"varint,7,opt,name=legacy,proto3" json:"legacy,omitempty"`
+	CancelSupported bool                   `protobuf:"varint,8,opt,name=cancel_supported,json=cancelSupported,proto3" json:"cancel_supported,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Target) Reset() {
@@ -765,6 +766,13 @@ func (x *Target) GetReason() string {
 func (x *Target) GetLegacy() bool {
 	if x != nil {
 		return x.Legacy
+	}
+	return false
+}
+
+func (x *Target) GetCancelSupported() bool {
+	if x != nil {
+		return x.CancelSupported
 	}
 	return false
 }
@@ -864,6 +872,7 @@ type CreateRollout struct {
 	Group          string                 `protobuf:"bytes,3,opt,name=group,proto3" json:"group,omitempty"`
 	PackageIds     []string               `protobuf:"bytes,4,rep,name=package_ids,json=packageIds,proto3" json:"package_ids,omitempty"`
 	FirstPackageId string                 `protobuf:"bytes,5,opt,name=first_package_id,json=firstPackageId,proto3" json:"first_package_id,omitempty"`
+	Management     *ManagementCredential  `protobuf:"bytes,6,opt,name=management,proto3" json:"management,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -931,6 +940,13 @@ func (x *CreateRollout) GetFirstPackageId() string {
 		return x.FirstPackageId
 	}
 	return ""
+}
+
+func (x *CreateRollout) GetManagement() *ManagementCredential {
+	if x != nil {
+		return x.Management
+	}
+	return nil
 }
 
 type RolloutQuery struct {
@@ -1434,20 +1450,25 @@ func (x *TargetRun) GetPreviousAttempts() []*Operation {
 }
 
 type Rollout struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Artifact          *Artifact              `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty"`
-	Group             string                 `protobuf:"bytes,3,opt,name=group,proto3" json:"group,omitempty"`
-	Targets           []*TargetRun           `protobuf:"bytes,4,rep,name=targets,proto3" json:"targets,omitempty"`
-	State             string                 `protobuf:"bytes,5,opt,name=state,proto3" json:"state,omitempty"`
-	CreatedBy         string                 `protobuf:"bytes,6,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	CreatedAt         int64                  `protobuf:"varint,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	Revision          uint64                 `protobuf:"varint,8,opt,name=revision,proto3" json:"revision,omitempty"`
-	Message           string                 `protobuf:"bytes,9,opt,name=message,proto3" json:"message,omitempty"`
-	RemainingApproved bool                   `protobuf:"varint,10,opt,name=remaining_approved,json=remainingApproved,proto3" json:"remaining_approved,omitempty"`
-	CancelRequested   bool                   `protobuf:"varint,11,opt,name=cancel_requested,json=cancelRequested,proto3" json:"cancel_requested,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Id                  string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Artifact            *Artifact              `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	Group               string                 `protobuf:"bytes,3,opt,name=group,proto3" json:"group,omitempty"`
+	Targets             []*TargetRun           `protobuf:"bytes,4,rep,name=targets,proto3" json:"targets,omitempty"`
+	State               string                 `protobuf:"bytes,5,opt,name=state,proto3" json:"state,omitempty"`
+	CreatedBy           string                 `protobuf:"bytes,6,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedAt           int64                  `protobuf:"varint,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Revision            uint64                 `protobuf:"varint,8,opt,name=revision,proto3" json:"revision,omitempty"`
+	Message             string                 `protobuf:"bytes,9,opt,name=message,proto3" json:"message,omitempty"`
+	RemainingApproved   bool                   `protobuf:"varint,10,opt,name=remaining_approved,json=remainingApproved,proto3" json:"remaining_approved,omitempty"`
+	CancelRequested     bool                   `protobuf:"varint,11,opt,name=cancel_requested,json=cancelRequested,proto3" json:"cancel_requested,omitempty"`
+	ManagementSessionId string                 `protobuf:"bytes,12,opt,name=management_session_id,json=managementSessionId,proto3" json:"management_session_id,omitempty"`
+	EndReason           string                 `protobuf:"bytes,13,opt,name=end_reason,json=endReason,proto3" json:"end_reason,omitempty"`
+	LastCheckedAt       int64                  `protobuf:"varint,14,opt,name=last_checked_at,json=lastCheckedAt,proto3" json:"last_checked_at,omitempty"`
+	NextCheckAt         int64                  `protobuf:"varint,15,opt,name=next_check_at,json=nextCheckAt,proto3" json:"next_check_at,omitempty"`
+	BlocksDeployment    bool                   `protobuf:"varint,16,opt,name=blocks_deployment,json=blocksDeployment,proto3" json:"blocks_deployment,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *Rollout) Reset() {
@@ -1557,6 +1578,239 @@ func (x *Rollout) GetCancelRequested() bool {
 	return false
 }
 
+func (x *Rollout) GetManagementSessionId() string {
+	if x != nil {
+		return x.ManagementSessionId
+	}
+	return ""
+}
+
+func (x *Rollout) GetEndReason() string {
+	if x != nil {
+		return x.EndReason
+	}
+	return ""
+}
+
+func (x *Rollout) GetLastCheckedAt() int64 {
+	if x != nil {
+		return x.LastCheckedAt
+	}
+	return 0
+}
+
+func (x *Rollout) GetNextCheckAt() int64 {
+	if x != nil {
+		return x.NextCheckAt
+	}
+	return 0
+}
+
+func (x *Rollout) GetBlocksDeployment() bool {
+	if x != nil {
+		return x.BlocksDeployment
+	}
+	return false
+}
+
+// Management belongs to the creating CLI, never to a Watch stream. Times are Unix milliseconds.
+type ManagementCredential struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ManagementCredential) Reset() {
+	*x = ManagementCredential{}
+	mi := &file_opm_api_control_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ManagementCredential) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ManagementCredential) ProtoMessage() {}
+
+func (x *ManagementCredential) ProtoReflect() protoreflect.Message {
+	mi := &file_opm_api_control_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ManagementCredential.ProtoReflect.Descriptor instead.
+func (*ManagementCredential) Descriptor() ([]byte, []int) {
+	return file_opm_api_control_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ManagementCredential) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ManagementCredential) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type ManagementSession struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	LastSeenAt    int64                  `protobuf:"varint,3,opt,name=last_seen_at,json=lastSeenAt,proto3" json:"last_seen_at,omitempty"`
+	ExpiresAt     int64                  `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	RolloutId     string                 `protobuf:"bytes,5,opt,name=rollout_id,json=rolloutId,proto3" json:"rollout_id,omitempty"`
+	State         string                 `protobuf:"bytes,6,opt,name=state,proto3" json:"state,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ManagementSession) Reset() {
+	*x = ManagementSession{}
+	mi := &file_opm_api_control_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ManagementSession) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ManagementSession) ProtoMessage() {}
+
+func (x *ManagementSession) ProtoReflect() protoreflect.Message {
+	mi := &file_opm_api_control_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ManagementSession.ProtoReflect.Descriptor instead.
+func (*ManagementSession) Descriptor() ([]byte, []int) {
+	return file_opm_api_control_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ManagementSession) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ManagementSession) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *ManagementSession) GetLastSeenAt() int64 {
+	if x != nil {
+		return x.LastSeenAt
+	}
+	return 0
+}
+
+func (x *ManagementSession) GetExpiresAt() int64 {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return 0
+}
+
+func (x *ManagementSession) GetRolloutId() string {
+	if x != nil {
+		return x.RolloutId
+	}
+	return ""
+}
+
+func (x *ManagementSession) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+// Returned as gRPC status details on a conflicting Create/Act; no string parsing needed.
+type RolloutConflict struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RolloutId     string                 `protobuf:"bytes,1,opt,name=rollout_id,json=rolloutId,proto3" json:"rollout_id,omitempty"`
+	Group         string                 `protobuf:"bytes,2,opt,name=group,proto3" json:"group,omitempty"`
+	Process       string                 `protobuf:"bytes,3,opt,name=process,proto3" json:"process,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RolloutConflict) Reset() {
+	*x = RolloutConflict{}
+	mi := &file_opm_api_control_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RolloutConflict) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RolloutConflict) ProtoMessage() {}
+
+func (x *RolloutConflict) ProtoReflect() protoreflect.Message {
+	mi := &file_opm_api_control_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RolloutConflict.ProtoReflect.Descriptor instead.
+func (*RolloutConflict) Descriptor() ([]byte, []int) {
+	return file_opm_api_control_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *RolloutConflict) GetRolloutId() string {
+	if x != nil {
+		return x.RolloutId
+	}
+	return ""
+}
+
+func (x *RolloutConflict) GetGroup() string {
+	if x != nil {
+		return x.Group
+	}
+	return ""
+}
+
+func (x *RolloutConflict) GetProcess() string {
+	if x != nil {
+		return x.Process
+	}
+	return ""
+}
+
 type OperationSpec struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1572,7 +1826,7 @@ type OperationSpec struct {
 
 func (x *OperationSpec) Reset() {
 	*x = OperationSpec{}
-	mi := &file_opm_api_control_proto_msgTypes[22]
+	mi := &file_opm_api_control_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1584,7 +1838,7 @@ func (x *OperationSpec) String() string {
 func (*OperationSpec) ProtoMessage() {}
 
 func (x *OperationSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_opm_api_control_proto_msgTypes[22]
+	mi := &file_opm_api_control_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1597,7 +1851,7 @@ func (x *OperationSpec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationSpec.ProtoReflect.Descriptor instead.
 func (*OperationSpec) Descriptor() ([]byte, []int) {
-	return file_opm_api_control_proto_rawDescGZIP(), []int{22}
+	return file_opm_api_control_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *OperationSpec) GetId() string {
@@ -1659,7 +1913,7 @@ type StageChunk struct {
 
 func (x *StageChunk) Reset() {
 	*x = StageChunk{}
-	mi := &file_opm_api_control_proto_msgTypes[23]
+	mi := &file_opm_api_control_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1671,7 +1925,7 @@ func (x *StageChunk) String() string {
 func (*StageChunk) ProtoMessage() {}
 
 func (x *StageChunk) ProtoReflect() protoreflect.Message {
-	mi := &file_opm_api_control_proto_msgTypes[23]
+	mi := &file_opm_api_control_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1684,7 +1938,7 @@ func (x *StageChunk) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StageChunk.ProtoReflect.Descriptor instead.
 func (*StageChunk) Descriptor() ([]byte, []int) {
-	return file_opm_api_control_proto_rawDescGZIP(), []int{23}
+	return file_opm_api_control_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *StageChunk) GetSpec() *OperationSpec {
@@ -1710,7 +1964,7 @@ type OperationQuery struct {
 
 func (x *OperationQuery) Reset() {
 	*x = OperationQuery{}
-	mi := &file_opm_api_control_proto_msgTypes[24]
+	mi := &file_opm_api_control_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1722,7 +1976,7 @@ func (x *OperationQuery) String() string {
 func (*OperationQuery) ProtoMessage() {}
 
 func (x *OperationQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_opm_api_control_proto_msgTypes[24]
+	mi := &file_opm_api_control_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1735,7 +1989,7 @@ func (x *OperationQuery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationQuery.ProtoReflect.Descriptor instead.
 func (*OperationQuery) Descriptor() ([]byte, []int) {
-	return file_opm_api_control_proto_rawDescGZIP(), []int{24}
+	return file_opm_api_control_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *OperationQuery) GetId() string {
@@ -1807,7 +2061,7 @@ const file_opm_api_control_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
 	"\aprocess\x18\x02 \x01(\tR\aprocess\"E\n" +
 	"\fArtifactList\x125\n" +
-	"\tartifacts\x18\x01 \x03(\v2\x17.fatima.opm.v2.ArtifactR\tartifacts\"\xc3\x01\n" +
+	"\tartifacts\x18\x01 \x03(\v2\x17.fatima.opm.v2.ArtifactR\tartifacts\"\xee\x01\n" +
 	"\x06Target\x12\x1d\n" +
 	"\n" +
 	"package_id\x18\x01 \x01(\tR\tpackageId\x12\x14\n" +
@@ -1816,12 +2070,13 @@ const file_opm_api_control_proto_rawDesc = "" +
 	"\bplatform\x18\x04 \x01(\tR\bplatform\x12\x1c\n" +
 	"\tsupported\x18\x05 \x01(\bR\tsupported\x12\x16\n" +
 	"\x06reason\x18\x06 \x01(\tR\x06reason\x12\x16\n" +
-	"\x06legacy\x18\a \x01(\bR\x06legacy\"#\n" +
+	"\x06legacy\x18\a \x01(\bR\x06legacy\x12)\n" +
+	"\x10cancel_supported\x18\b \x01(\bR\x0fcancelSupported\"#\n" +
 	"\vTargetQuery\x12\x14\n" +
 	"\x05group\x18\x01 \x01(\tR\x05group\"=\n" +
 	"\n" +
 	"TargetList\x12/\n" +
-	"\atargets\x18\x01 \x03(\v2\x15.fatima.opm.v2.TargetR\atargets\"\xb0\x01\n" +
+	"\atargets\x18\x01 \x03(\v2\x15.fatima.opm.v2.TargetR\atargets\"\xf5\x01\n" +
 	"\rCreateRollout\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x12\x1f\n" +
@@ -1830,7 +2085,10 @@ const file_opm_api_control_proto_rawDesc = "" +
 	"\x05group\x18\x03 \x01(\tR\x05group\x12\x1f\n" +
 	"\vpackage_ids\x18\x04 \x03(\tR\n" +
 	"packageIds\x12(\n" +
-	"\x10first_package_id\x18\x05 \x01(\tR\x0efirstPackageId\"\x1e\n" +
+	"\x10first_package_id\x18\x05 \x01(\tR\x0efirstPackageId\x12C\n" +
+	"\n" +
+	"management\x18\x06 \x01(\v2#.fatima.opm.v2.ManagementCredentialR\n" +
+	"management\"\x1e\n" +
 	"\fRolloutQuery\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"A\n" +
 	"\vRolloutList\x122\n" +
@@ -1875,7 +2133,7 @@ const file_opm_api_control_proto_rawDesc = "" +
 	"sent_bytes\x18\x03 \x01(\x03R\tsentBytes\x12\x1f\n" +
 	"\vtotal_bytes\x18\x04 \x01(\x03R\n" +
 	"totalBytes\x12E\n" +
-	"\x11previous_attempts\x18\x05 \x03(\v2\x18.fatima.opm.v2.OperationR\x10previousAttempts\"\xfc\x02\n" +
+	"\x11previous_attempts\x18\x05 \x03(\v2\x18.fatima.opm.v2.OperationR\x10previousAttempts\"\xc8\x04\n" +
 	"\aRollout\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x123\n" +
 	"\bartifact\x18\x02 \x01(\v2\x17.fatima.opm.v2.ArtifactR\bartifact\x12\x14\n" +
@@ -1890,7 +2148,31 @@ const file_opm_api_control_proto_rawDesc = "" +
 	"\amessage\x18\t \x01(\tR\amessage\x12-\n" +
 	"\x12remaining_approved\x18\n" +
 	" \x01(\bR\x11remainingApproved\x12)\n" +
-	"\x10cancel_requested\x18\v \x01(\bR\x0fcancelRequested\"\xc4\x01\n" +
+	"\x10cancel_requested\x18\v \x01(\bR\x0fcancelRequested\x122\n" +
+	"\x15management_session_id\x18\f \x01(\tR\x13managementSessionId\x12\x1d\n" +
+	"\n" +
+	"end_reason\x18\r \x01(\tR\tendReason\x12&\n" +
+	"\x0flast_checked_at\x18\x0e \x01(\x03R\rlastCheckedAt\x12\"\n" +
+	"\rnext_check_at\x18\x0f \x01(\x03R\vnextCheckAt\x12+\n" +
+	"\x11blocks_deployment\x18\x10 \x01(\bR\x10blocksDeployment\"<\n" +
+	"\x14ManagementCredential\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\"\xaf\x01\n" +
+	"\x11ManagementSession\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\x12 \n" +
+	"\flast_seen_at\x18\x03 \x01(\x03R\n" +
+	"lastSeenAt\x12\x1d\n" +
+	"\n" +
+	"expires_at\x18\x04 \x01(\x03R\texpiresAt\x12\x1d\n" +
+	"\n" +
+	"rollout_id\x18\x05 \x01(\tR\trolloutId\x12\x14\n" +
+	"\x05state\x18\x06 \x01(\tR\x05state\"`\n" +
+	"\x0fRolloutConflict\x12\x1d\n" +
+	"\n" +
+	"rollout_id\x18\x01 \x01(\tR\trolloutId\x12\x14\n" +
+	"\x05group\x18\x02 \x01(\tR\x05group\x12\x18\n" +
+	"\aprocess\x18\x03 \x01(\tR\aprocess\"\xc4\x01\n" +
 	"\rOperationSpec\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vartifact_id\x18\x02 \x01(\tR\n" +
@@ -1916,15 +2198,20 @@ const file_opm_api_control_proto_rawDesc = "" +
 	"\tArtifacts\x12?\n" +
 	"\x06Upload\x12\x1a.fatima.opm.v2.UploadChunk\x1a\x17.fatima.opm.v2.Artifact(\x01\x12A\n" +
 	"\x04List\x12\x1c.fatima.opm.v2.ArtifactQuery\x1a\x1b.fatima.opm.v2.ArtifactList\x12<\n" +
-	"\x03Get\x12\x1c.fatima.opm.v2.ArtifactQuery\x1a\x17.fatima.opm.v2.Artifact2\x82\x03\n" +
+	"\x03Get\x12\x1c.fatima.opm.v2.ArtifactQuery\x1a\x17.fatima.opm.v2.Artifact2\xfb\x01\n" +
+	"\x14DeploymentManagement\x12>\n" +
+	"\x04Open\x12\x14.fatima.opm.v2.Empty\x1a .fatima.opm.v2.ManagementSession\x12R\n" +
+	"\tHeartbeat\x12#.fatima.opm.v2.ManagementCredential\x1a .fatima.opm.v2.ManagementSession\x12O\n" +
+	"\x06Detach\x12#.fatima.opm.v2.ManagementCredential\x1a .fatima.opm.v2.ManagementSession2\x82\x03\n" +
 	"\vDeployments\x12@\n" +
 	"\aTargets\x12\x1a.fatima.opm.v2.TargetQuery\x1a\x19.fatima.opm.v2.TargetList\x12>\n" +
 	"\x06Create\x12\x1c.fatima.opm.v2.CreateRollout\x1a\x16.fatima.opm.v2.Rollout\x128\n" +
 	"\x04List\x12\x14.fatima.opm.v2.Empty\x1a\x1a.fatima.opm.v2.RolloutList\x12:\n" +
 	"\x03Get\x12\x1b.fatima.opm.v2.RolloutQuery\x1a\x16.fatima.opm.v2.Rollout\x12;\n" +
 	"\x03Act\x12\x1c.fatima.opm.v2.RolloutAction\x1a\x16.fatima.opm.v2.Rollout\x12>\n" +
-	"\x05Watch\x12\x1b.fatima.opm.v2.WatchRequest\x1a\x16.fatima.opm.v2.Rollout0\x012\x99\x02\n" +
-	"\x11PackageDeployment\x12>\n" +
+	"\x05Watch\x12\x1b.fatima.opm.v2.WatchRequest\x1a\x16.fatima.opm.v2.Rollout0\x012\xdb\x02\n" +
+	"\x11PackageDeployment\x12@\n" +
+	"\x06Cancel\x12\x1c.fatima.opm.v2.OperationSpec\x1a\x18.fatima.opm.v2.Operation\x12>\n" +
 	"\x05Stage\x12\x19.fatima.opm.v2.StageChunk\x1a\x18.fatima.opm.v2.Operation(\x01\x12@\n" +
 	"\x05Start\x12\x1d.fatima.opm.v2.OperationQuery\x1a\x18.fatima.opm.v2.Operation\x12>\n" +
 	"\x03Get\x12\x1d.fatima.opm.v2.OperationQuery\x1a\x18.fatima.opm.v2.Operation\x12B\n" +
@@ -1942,83 +2229,95 @@ func file_opm_api_control_proto_rawDescGZIP() []byte {
 	return file_opm_api_control_proto_rawDescData
 }
 
-var file_opm_api_control_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_opm_api_control_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_opm_api_control_proto_goTypes = []any{
-	(*Empty)(nil),           // 0: fatima.opm.v2.Empty
-	(*Capabilities)(nil),    // 1: fatima.opm.v2.Capabilities
-	(*LoginRequest)(nil),    // 2: fatima.opm.v2.LoginRequest
-	(*Session)(nil),         // 3: fatima.opm.v2.Session
-	(*ValidateRequest)(nil), // 4: fatima.opm.v2.ValidateRequest
-	(*Artifact)(nil),        // 5: fatima.opm.v2.Artifact
-	(*UploadHeader)(nil),    // 6: fatima.opm.v2.UploadHeader
-	(*UploadChunk)(nil),     // 7: fatima.opm.v2.UploadChunk
-	(*ArtifactQuery)(nil),   // 8: fatima.opm.v2.ArtifactQuery
-	(*ArtifactList)(nil),    // 9: fatima.opm.v2.ArtifactList
-	(*Target)(nil),          // 10: fatima.opm.v2.Target
-	(*TargetQuery)(nil),     // 11: fatima.opm.v2.TargetQuery
-	(*TargetList)(nil),      // 12: fatima.opm.v2.TargetList
-	(*CreateRollout)(nil),   // 13: fatima.opm.v2.CreateRollout
-	(*RolloutQuery)(nil),    // 14: fatima.opm.v2.RolloutQuery
-	(*RolloutList)(nil),     // 15: fatima.opm.v2.RolloutList
-	(*RolloutAction)(nil),   // 16: fatima.opm.v2.RolloutAction
-	(*WatchRequest)(nil),    // 17: fatima.opm.v2.WatchRequest
-	(*Event)(nil),           // 18: fatima.opm.v2.Event
-	(*Operation)(nil),       // 19: fatima.opm.v2.Operation
-	(*TargetRun)(nil),       // 20: fatima.opm.v2.TargetRun
-	(*Rollout)(nil),         // 21: fatima.opm.v2.Rollout
-	(*OperationSpec)(nil),   // 22: fatima.opm.v2.OperationSpec
-	(*StageChunk)(nil),      // 23: fatima.opm.v2.StageChunk
-	(*OperationQuery)(nil),  // 24: fatima.opm.v2.OperationQuery
+	(*Empty)(nil),                // 0: fatima.opm.v2.Empty
+	(*Capabilities)(nil),         // 1: fatima.opm.v2.Capabilities
+	(*LoginRequest)(nil),         // 2: fatima.opm.v2.LoginRequest
+	(*Session)(nil),              // 3: fatima.opm.v2.Session
+	(*ValidateRequest)(nil),      // 4: fatima.opm.v2.ValidateRequest
+	(*Artifact)(nil),             // 5: fatima.opm.v2.Artifact
+	(*UploadHeader)(nil),         // 6: fatima.opm.v2.UploadHeader
+	(*UploadChunk)(nil),          // 7: fatima.opm.v2.UploadChunk
+	(*ArtifactQuery)(nil),        // 8: fatima.opm.v2.ArtifactQuery
+	(*ArtifactList)(nil),         // 9: fatima.opm.v2.ArtifactList
+	(*Target)(nil),               // 10: fatima.opm.v2.Target
+	(*TargetQuery)(nil),          // 11: fatima.opm.v2.TargetQuery
+	(*TargetList)(nil),           // 12: fatima.opm.v2.TargetList
+	(*CreateRollout)(nil),        // 13: fatima.opm.v2.CreateRollout
+	(*RolloutQuery)(nil),         // 14: fatima.opm.v2.RolloutQuery
+	(*RolloutList)(nil),          // 15: fatima.opm.v2.RolloutList
+	(*RolloutAction)(nil),        // 16: fatima.opm.v2.RolloutAction
+	(*WatchRequest)(nil),         // 17: fatima.opm.v2.WatchRequest
+	(*Event)(nil),                // 18: fatima.opm.v2.Event
+	(*Operation)(nil),            // 19: fatima.opm.v2.Operation
+	(*TargetRun)(nil),            // 20: fatima.opm.v2.TargetRun
+	(*Rollout)(nil),              // 21: fatima.opm.v2.Rollout
+	(*ManagementCredential)(nil), // 22: fatima.opm.v2.ManagementCredential
+	(*ManagementSession)(nil),    // 23: fatima.opm.v2.ManagementSession
+	(*RolloutConflict)(nil),      // 24: fatima.opm.v2.RolloutConflict
+	(*OperationSpec)(nil),        // 25: fatima.opm.v2.OperationSpec
+	(*StageChunk)(nil),           // 26: fatima.opm.v2.StageChunk
+	(*OperationQuery)(nil),       // 27: fatima.opm.v2.OperationQuery
 }
 var file_opm_api_control_proto_depIdxs = []int32{
 	6,  // 0: fatima.opm.v2.UploadChunk.header:type_name -> fatima.opm.v2.UploadHeader
 	5,  // 1: fatima.opm.v2.ArtifactList.artifacts:type_name -> fatima.opm.v2.Artifact
 	10, // 2: fatima.opm.v2.TargetList.targets:type_name -> fatima.opm.v2.Target
-	21, // 3: fatima.opm.v2.RolloutList.rollouts:type_name -> fatima.opm.v2.Rollout
-	18, // 4: fatima.opm.v2.Operation.events:type_name -> fatima.opm.v2.Event
-	10, // 5: fatima.opm.v2.TargetRun.target:type_name -> fatima.opm.v2.Target
-	19, // 6: fatima.opm.v2.TargetRun.operation:type_name -> fatima.opm.v2.Operation
-	19, // 7: fatima.opm.v2.TargetRun.previous_attempts:type_name -> fatima.opm.v2.Operation
-	5,  // 8: fatima.opm.v2.Rollout.artifact:type_name -> fatima.opm.v2.Artifact
-	20, // 9: fatima.opm.v2.Rollout.targets:type_name -> fatima.opm.v2.TargetRun
-	22, // 10: fatima.opm.v2.StageChunk.spec:type_name -> fatima.opm.v2.OperationSpec
-	0,  // 11: fatima.opm.v2.Discovery.GetCapabilities:input_type -> fatima.opm.v2.Empty
-	2,  // 12: fatima.opm.v2.Identity.Login:input_type -> fatima.opm.v2.LoginRequest
-	4,  // 13: fatima.opm.v2.Identity.Validate:input_type -> fatima.opm.v2.ValidateRequest
-	7,  // 14: fatima.opm.v2.Artifacts.Upload:input_type -> fatima.opm.v2.UploadChunk
-	8,  // 15: fatima.opm.v2.Artifacts.List:input_type -> fatima.opm.v2.ArtifactQuery
-	8,  // 16: fatima.opm.v2.Artifacts.Get:input_type -> fatima.opm.v2.ArtifactQuery
-	11, // 17: fatima.opm.v2.Deployments.Targets:input_type -> fatima.opm.v2.TargetQuery
-	13, // 18: fatima.opm.v2.Deployments.Create:input_type -> fatima.opm.v2.CreateRollout
-	0,  // 19: fatima.opm.v2.Deployments.List:input_type -> fatima.opm.v2.Empty
-	14, // 20: fatima.opm.v2.Deployments.Get:input_type -> fatima.opm.v2.RolloutQuery
-	16, // 21: fatima.opm.v2.Deployments.Act:input_type -> fatima.opm.v2.RolloutAction
-	17, // 22: fatima.opm.v2.Deployments.Watch:input_type -> fatima.opm.v2.WatchRequest
-	23, // 23: fatima.opm.v2.PackageDeployment.Stage:input_type -> fatima.opm.v2.StageChunk
-	24, // 24: fatima.opm.v2.PackageDeployment.Start:input_type -> fatima.opm.v2.OperationQuery
-	24, // 25: fatima.opm.v2.PackageDeployment.Get:input_type -> fatima.opm.v2.OperationQuery
-	24, // 26: fatima.opm.v2.PackageDeployment.Watch:input_type -> fatima.opm.v2.OperationQuery
-	1,  // 27: fatima.opm.v2.Discovery.GetCapabilities:output_type -> fatima.opm.v2.Capabilities
-	3,  // 28: fatima.opm.v2.Identity.Login:output_type -> fatima.opm.v2.Session
-	3,  // 29: fatima.opm.v2.Identity.Validate:output_type -> fatima.opm.v2.Session
-	5,  // 30: fatima.opm.v2.Artifacts.Upload:output_type -> fatima.opm.v2.Artifact
-	9,  // 31: fatima.opm.v2.Artifacts.List:output_type -> fatima.opm.v2.ArtifactList
-	5,  // 32: fatima.opm.v2.Artifacts.Get:output_type -> fatima.opm.v2.Artifact
-	12, // 33: fatima.opm.v2.Deployments.Targets:output_type -> fatima.opm.v2.TargetList
-	21, // 34: fatima.opm.v2.Deployments.Create:output_type -> fatima.opm.v2.Rollout
-	15, // 35: fatima.opm.v2.Deployments.List:output_type -> fatima.opm.v2.RolloutList
-	21, // 36: fatima.opm.v2.Deployments.Get:output_type -> fatima.opm.v2.Rollout
-	21, // 37: fatima.opm.v2.Deployments.Act:output_type -> fatima.opm.v2.Rollout
-	21, // 38: fatima.opm.v2.Deployments.Watch:output_type -> fatima.opm.v2.Rollout
-	19, // 39: fatima.opm.v2.PackageDeployment.Stage:output_type -> fatima.opm.v2.Operation
-	19, // 40: fatima.opm.v2.PackageDeployment.Start:output_type -> fatima.opm.v2.Operation
-	19, // 41: fatima.opm.v2.PackageDeployment.Get:output_type -> fatima.opm.v2.Operation
-	19, // 42: fatima.opm.v2.PackageDeployment.Watch:output_type -> fatima.opm.v2.Operation
-	27, // [27:43] is the sub-list for method output_type
-	11, // [11:27] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	22, // 3: fatima.opm.v2.CreateRollout.management:type_name -> fatima.opm.v2.ManagementCredential
+	21, // 4: fatima.opm.v2.RolloutList.rollouts:type_name -> fatima.opm.v2.Rollout
+	18, // 5: fatima.opm.v2.Operation.events:type_name -> fatima.opm.v2.Event
+	10, // 6: fatima.opm.v2.TargetRun.target:type_name -> fatima.opm.v2.Target
+	19, // 7: fatima.opm.v2.TargetRun.operation:type_name -> fatima.opm.v2.Operation
+	19, // 8: fatima.opm.v2.TargetRun.previous_attempts:type_name -> fatima.opm.v2.Operation
+	5,  // 9: fatima.opm.v2.Rollout.artifact:type_name -> fatima.opm.v2.Artifact
+	20, // 10: fatima.opm.v2.Rollout.targets:type_name -> fatima.opm.v2.TargetRun
+	25, // 11: fatima.opm.v2.StageChunk.spec:type_name -> fatima.opm.v2.OperationSpec
+	0,  // 12: fatima.opm.v2.Discovery.GetCapabilities:input_type -> fatima.opm.v2.Empty
+	2,  // 13: fatima.opm.v2.Identity.Login:input_type -> fatima.opm.v2.LoginRequest
+	4,  // 14: fatima.opm.v2.Identity.Validate:input_type -> fatima.opm.v2.ValidateRequest
+	7,  // 15: fatima.opm.v2.Artifacts.Upload:input_type -> fatima.opm.v2.UploadChunk
+	8,  // 16: fatima.opm.v2.Artifacts.List:input_type -> fatima.opm.v2.ArtifactQuery
+	8,  // 17: fatima.opm.v2.Artifacts.Get:input_type -> fatima.opm.v2.ArtifactQuery
+	0,  // 18: fatima.opm.v2.DeploymentManagement.Open:input_type -> fatima.opm.v2.Empty
+	22, // 19: fatima.opm.v2.DeploymentManagement.Heartbeat:input_type -> fatima.opm.v2.ManagementCredential
+	22, // 20: fatima.opm.v2.DeploymentManagement.Detach:input_type -> fatima.opm.v2.ManagementCredential
+	11, // 21: fatima.opm.v2.Deployments.Targets:input_type -> fatima.opm.v2.TargetQuery
+	13, // 22: fatima.opm.v2.Deployments.Create:input_type -> fatima.opm.v2.CreateRollout
+	0,  // 23: fatima.opm.v2.Deployments.List:input_type -> fatima.opm.v2.Empty
+	14, // 24: fatima.opm.v2.Deployments.Get:input_type -> fatima.opm.v2.RolloutQuery
+	16, // 25: fatima.opm.v2.Deployments.Act:input_type -> fatima.opm.v2.RolloutAction
+	17, // 26: fatima.opm.v2.Deployments.Watch:input_type -> fatima.opm.v2.WatchRequest
+	25, // 27: fatima.opm.v2.PackageDeployment.Cancel:input_type -> fatima.opm.v2.OperationSpec
+	26, // 28: fatima.opm.v2.PackageDeployment.Stage:input_type -> fatima.opm.v2.StageChunk
+	27, // 29: fatima.opm.v2.PackageDeployment.Start:input_type -> fatima.opm.v2.OperationQuery
+	27, // 30: fatima.opm.v2.PackageDeployment.Get:input_type -> fatima.opm.v2.OperationQuery
+	27, // 31: fatima.opm.v2.PackageDeployment.Watch:input_type -> fatima.opm.v2.OperationQuery
+	1,  // 32: fatima.opm.v2.Discovery.GetCapabilities:output_type -> fatima.opm.v2.Capabilities
+	3,  // 33: fatima.opm.v2.Identity.Login:output_type -> fatima.opm.v2.Session
+	3,  // 34: fatima.opm.v2.Identity.Validate:output_type -> fatima.opm.v2.Session
+	5,  // 35: fatima.opm.v2.Artifacts.Upload:output_type -> fatima.opm.v2.Artifact
+	9,  // 36: fatima.opm.v2.Artifacts.List:output_type -> fatima.opm.v2.ArtifactList
+	5,  // 37: fatima.opm.v2.Artifacts.Get:output_type -> fatima.opm.v2.Artifact
+	23, // 38: fatima.opm.v2.DeploymentManagement.Open:output_type -> fatima.opm.v2.ManagementSession
+	23, // 39: fatima.opm.v2.DeploymentManagement.Heartbeat:output_type -> fatima.opm.v2.ManagementSession
+	23, // 40: fatima.opm.v2.DeploymentManagement.Detach:output_type -> fatima.opm.v2.ManagementSession
+	12, // 41: fatima.opm.v2.Deployments.Targets:output_type -> fatima.opm.v2.TargetList
+	21, // 42: fatima.opm.v2.Deployments.Create:output_type -> fatima.opm.v2.Rollout
+	15, // 43: fatima.opm.v2.Deployments.List:output_type -> fatima.opm.v2.RolloutList
+	21, // 44: fatima.opm.v2.Deployments.Get:output_type -> fatima.opm.v2.Rollout
+	21, // 45: fatima.opm.v2.Deployments.Act:output_type -> fatima.opm.v2.Rollout
+	21, // 46: fatima.opm.v2.Deployments.Watch:output_type -> fatima.opm.v2.Rollout
+	19, // 47: fatima.opm.v2.PackageDeployment.Cancel:output_type -> fatima.opm.v2.Operation
+	19, // 48: fatima.opm.v2.PackageDeployment.Stage:output_type -> fatima.opm.v2.Operation
+	19, // 49: fatima.opm.v2.PackageDeployment.Start:output_type -> fatima.opm.v2.Operation
+	19, // 50: fatima.opm.v2.PackageDeployment.Get:output_type -> fatima.opm.v2.Operation
+	19, // 51: fatima.opm.v2.PackageDeployment.Watch:output_type -> fatima.opm.v2.Operation
+	32, // [32:52] is the sub-list for method output_type
+	12, // [12:32] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_opm_api_control_proto_init() }
@@ -2032,9 +2331,9 @@ func file_opm_api_control_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_opm_api_control_proto_rawDesc), len(file_opm_api_control_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   25,
+			NumMessages:   28,
 			NumExtensions: 0,
-			NumServices:   5,
+			NumServices:   6,
 		},
 		GoTypes:           file_opm_api_control_proto_goTypes,
 		DependencyIndexes: file_opm_api_control_proto_depIdxs,

@@ -433,6 +433,184 @@ var Artifacts_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
+	DeploymentManagement_Open_FullMethodName      = "/fatima.opm.v2.DeploymentManagement/Open"
+	DeploymentManagement_Heartbeat_FullMethodName = "/fatima.opm.v2.DeploymentManagement/Heartbeat"
+	DeploymentManagement_Detach_FullMethodName    = "/fatima.opm.v2.DeploymentManagement/Detach"
+)
+
+// DeploymentManagementClient is the client API for DeploymentManagement service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type DeploymentManagementClient interface {
+	Open(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ManagementSession, error)
+	Heartbeat(ctx context.Context, in *ManagementCredential, opts ...grpc.CallOption) (*ManagementSession, error)
+	Detach(ctx context.Context, in *ManagementCredential, opts ...grpc.CallOption) (*ManagementSession, error)
+}
+
+type deploymentManagementClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewDeploymentManagementClient(cc grpc.ClientConnInterface) DeploymentManagementClient {
+	return &deploymentManagementClient{cc}
+}
+
+func (c *deploymentManagementClient) Open(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ManagementSession, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ManagementSession)
+	err := c.cc.Invoke(ctx, DeploymentManagement_Open_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *deploymentManagementClient) Heartbeat(ctx context.Context, in *ManagementCredential, opts ...grpc.CallOption) (*ManagementSession, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ManagementSession)
+	err := c.cc.Invoke(ctx, DeploymentManagement_Heartbeat_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *deploymentManagementClient) Detach(ctx context.Context, in *ManagementCredential, opts ...grpc.CallOption) (*ManagementSession, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ManagementSession)
+	err := c.cc.Invoke(ctx, DeploymentManagement_Detach_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// DeploymentManagementServer is the server API for DeploymentManagement service.
+// All implementations must embed UnimplementedDeploymentManagementServer
+// for forward compatibility.
+type DeploymentManagementServer interface {
+	Open(context.Context, *Empty) (*ManagementSession, error)
+	Heartbeat(context.Context, *ManagementCredential) (*ManagementSession, error)
+	Detach(context.Context, *ManagementCredential) (*ManagementSession, error)
+	mustEmbedUnimplementedDeploymentManagementServer()
+}
+
+// UnimplementedDeploymentManagementServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedDeploymentManagementServer struct{}
+
+func (UnimplementedDeploymentManagementServer) Open(context.Context, *Empty) (*ManagementSession, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Open not implemented")
+}
+func (UnimplementedDeploymentManagementServer) Heartbeat(context.Context, *ManagementCredential) (*ManagementSession, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Heartbeat not implemented")
+}
+func (UnimplementedDeploymentManagementServer) Detach(context.Context, *ManagementCredential) (*ManagementSession, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Detach not implemented")
+}
+func (UnimplementedDeploymentManagementServer) mustEmbedUnimplementedDeploymentManagementServer() {}
+func (UnimplementedDeploymentManagementServer) testEmbeddedByValue()                              {}
+
+// UnsafeDeploymentManagementServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DeploymentManagementServer will
+// result in compilation errors.
+type UnsafeDeploymentManagementServer interface {
+	mustEmbedUnimplementedDeploymentManagementServer()
+}
+
+func RegisterDeploymentManagementServer(s grpc.ServiceRegistrar, srv DeploymentManagementServer) {
+	// If the following call pancis, it indicates UnimplementedDeploymentManagementServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&DeploymentManagement_ServiceDesc, srv)
+}
+
+func _DeploymentManagement_Open_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeploymentManagementServer).Open(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeploymentManagement_Open_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeploymentManagementServer).Open(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DeploymentManagement_Heartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ManagementCredential)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeploymentManagementServer).Heartbeat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeploymentManagement_Heartbeat_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeploymentManagementServer).Heartbeat(ctx, req.(*ManagementCredential))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DeploymentManagement_Detach_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ManagementCredential)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeploymentManagementServer).Detach(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeploymentManagement_Detach_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeploymentManagementServer).Detach(ctx, req.(*ManagementCredential))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// DeploymentManagement_ServiceDesc is the grpc.ServiceDesc for DeploymentManagement service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DeploymentManagement_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "fatima.opm.v2.DeploymentManagement",
+	HandlerType: (*DeploymentManagementServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Open",
+			Handler:    _DeploymentManagement_Open_Handler,
+		},
+		{
+			MethodName: "Heartbeat",
+			Handler:    _DeploymentManagement_Heartbeat_Handler,
+		},
+		{
+			MethodName: "Detach",
+			Handler:    _DeploymentManagement_Detach_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "opm/api/control.proto",
+}
+
+const (
 	Deployments_Targets_FullMethodName = "/fatima.opm.v2.Deployments/Targets"
 	Deployments_Create_FullMethodName  = "/fatima.opm.v2.Deployments/Create"
 	Deployments_List_FullMethodName    = "/fatima.opm.v2.Deployments/List"
@@ -729,16 +907,18 @@ var Deployments_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	PackageDeployment_Stage_FullMethodName = "/fatima.opm.v2.PackageDeployment/Stage"
-	PackageDeployment_Start_FullMethodName = "/fatima.opm.v2.PackageDeployment/Start"
-	PackageDeployment_Get_FullMethodName   = "/fatima.opm.v2.PackageDeployment/Get"
-	PackageDeployment_Watch_FullMethodName = "/fatima.opm.v2.PackageDeployment/Watch"
+	PackageDeployment_Cancel_FullMethodName = "/fatima.opm.v2.PackageDeployment/Cancel"
+	PackageDeployment_Stage_FullMethodName  = "/fatima.opm.v2.PackageDeployment/Stage"
+	PackageDeployment_Start_FullMethodName  = "/fatima.opm.v2.PackageDeployment/Start"
+	PackageDeployment_Get_FullMethodName    = "/fatima.opm.v2.PackageDeployment/Get"
+	PackageDeployment_Watch_FullMethodName  = "/fatima.opm.v2.PackageDeployment/Watch"
 )
 
 // PackageDeploymentClient is the client API for PackageDeployment service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PackageDeploymentClient interface {
+	Cancel(ctx context.Context, in *OperationSpec, opts ...grpc.CallOption) (*Operation, error)
 	Stage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[StageChunk, Operation], error)
 	Start(ctx context.Context, in *OperationQuery, opts ...grpc.CallOption) (*Operation, error)
 	Get(ctx context.Context, in *OperationQuery, opts ...grpc.CallOption) (*Operation, error)
@@ -751,6 +931,16 @@ type packageDeploymentClient struct {
 
 func NewPackageDeploymentClient(cc grpc.ClientConnInterface) PackageDeploymentClient {
 	return &packageDeploymentClient{cc}
+}
+
+func (c *packageDeploymentClient) Cancel(ctx context.Context, in *OperationSpec, opts ...grpc.CallOption) (*Operation, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Operation)
+	err := c.cc.Invoke(ctx, PackageDeployment_Cancel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *packageDeploymentClient) Stage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[StageChunk, Operation], error) {
@@ -809,6 +999,7 @@ type PackageDeployment_WatchClient = grpc.ServerStreamingClient[Operation]
 // All implementations must embed UnimplementedPackageDeploymentServer
 // for forward compatibility.
 type PackageDeploymentServer interface {
+	Cancel(context.Context, *OperationSpec) (*Operation, error)
 	Stage(grpc.ClientStreamingServer[StageChunk, Operation]) error
 	Start(context.Context, *OperationQuery) (*Operation, error)
 	Get(context.Context, *OperationQuery) (*Operation, error)
@@ -823,6 +1014,9 @@ type PackageDeploymentServer interface {
 // pointer dereference when methods are called.
 type UnimplementedPackageDeploymentServer struct{}
 
+func (UnimplementedPackageDeploymentServer) Cancel(context.Context, *OperationSpec) (*Operation, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Cancel not implemented")
+}
 func (UnimplementedPackageDeploymentServer) Stage(grpc.ClientStreamingServer[StageChunk, Operation]) error {
 	return status.Errorf(codes.Unimplemented, "method Stage not implemented")
 }
@@ -854,6 +1048,24 @@ func RegisterPackageDeploymentServer(s grpc.ServiceRegistrar, srv PackageDeploym
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&PackageDeployment_ServiceDesc, srv)
+}
+
+func _PackageDeployment_Cancel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OperationSpec)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PackageDeploymentServer).Cancel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PackageDeployment_Cancel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PackageDeploymentServer).Cancel(ctx, req.(*OperationSpec))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _PackageDeployment_Stage_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -917,6 +1129,10 @@ var PackageDeployment_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "fatima.opm.v2.PackageDeployment",
 	HandlerType: (*PackageDeploymentServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Cancel",
+			Handler:    _PackageDeployment_Cancel_Handler,
+		},
 		{
 			MethodName: "Start",
 			Handler:    _PackageDeployment_Start_Handler,
