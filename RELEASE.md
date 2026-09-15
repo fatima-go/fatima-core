@@ -1,5 +1,12 @@
 # release #
 
+## v2.0.0 ##
+- Go 모듈 경로를 `github.com/fatima-go/fatima-core/v2`로 변경
+- 운영 전용 `opm` 패키지를 `github.com/fatima-go/fatima-opm v1.0.0`으로 분리
+- 런타임·컴포넌트·IPC 및 기존 FatimaMessage 통신 동작 유지
+- 기존 v1.x 태그는 유지되며 기존 프로그램의 강제 업데이트는 불필요
+- v2로 업그레이드하는 프로그램은 core import 경로에 `/v2` 추가 필요
+
 ## v1.3.7 ##
 - `DeploymentManagement` gRPC 서비스 추가 (`Open`, `Heartbeat`, `Detach`)
   - 배포를 시작한 CLI의 관리 세션을 조회용 연결과 구분

@@ -26,7 +26,7 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/v2"
 	log "github.com/fatima-go/fatima-log"
 )
 

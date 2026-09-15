@@ -28,9 +28,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/builder"
-	"github.com/fatima-go/fatima-core/monitor"
+	"github.com/fatima-go/fatima-core/v2"
+	"github.com/fatima-go/fatima-core/v2/builder"
+	"github.com/fatima-go/fatima-core/v2/monitor"
 )
 
 type MockFatimaRuntime struct {

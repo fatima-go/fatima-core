@@ -21,7 +21,7 @@
 package fatima
 
 import (
-	"github.com/fatima-go/fatima-core/monitor"
+	"github.com/fatima-go/fatima-core/v2/monitor"
 )
 
 type FatimaRuntimeInteractor interface {

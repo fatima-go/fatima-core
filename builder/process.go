@@ -33,11 +33,11 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/builder/platform"
-	"github.com/fatima-go/fatima-core/ipc"
-	"github.com/fatima-go/fatima-core/lib"
-	"github.com/fatima-go/fatima-core/monitor"
+	"github.com/fatima-go/fatima-core/v2"
+	"github.com/fatima-go/fatima-core/v2/builder/platform"
+	"github.com/fatima-go/fatima-core/v2/ipc"
+	"github.com/fatima-go/fatima-core/v2/lib"
+	"github.com/fatima-go/fatima-core/v2/monitor"
 	"github.com/fatima-go/fatima-log"
 )
 

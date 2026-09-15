@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	fatima "github.com/fatima-go/fatima-core"
+	fatima "github.com/fatima-go/fatima-core/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

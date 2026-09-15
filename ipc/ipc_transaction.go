@@ -26,7 +26,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/fatima-go/fatima-core/lib"
+	"github.com/fatima-go/fatima-core/v2/lib"
 	log "github.com/fatima-go/fatima-log"
 )
 

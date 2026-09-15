@@ -22,7 +22,7 @@ package etl
 
 import (
 	"container/list"
-	"github.com/fatima-go/fatima-core/lib"
+	"github.com/fatima-go/fatima-core/v2/lib"
 	"github.com/fatima-go/fatima-log"
 	"math"
 	"runtime"

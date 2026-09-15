@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	fatima "github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/crypt"
+	fatima "github.com/fatima-go/fatima-core/v2"
+	"github.com/fatima-go/fatima-core/v2/crypt"
 	log "github.com/fatima-go/fatima-log"
 )
 

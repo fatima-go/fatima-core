@@ -28,8 +28,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatima-go/fatima-core"
-	"github.com/fatima-go/fatima-core/crypt"
+	"github.com/fatima-go/fatima-core/v2"
+	"github.com/fatima-go/fatima-core/v2/crypt"
 )
 
 type buildtinVariable string

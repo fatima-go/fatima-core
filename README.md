@@ -33,3 +33,10 @@ To https://github.com/fatima-go/fatima-core.git
 # release #
 - [release history](./RELEASE.md)
 
+
+## v2 migration
+
+Use `github.com/fatima-go/fatima-core/v2` and update all core subpackage imports to include `/v2`.
+Operations imports formerly under `fatima-core/opm` now use `github.com/fatima-go/fatima-opm` v1.0.0.
+Do not mix v1 and v2 runtime types in one program. Existing v1 programs may remain pinned to their current releases.
+Runtime behavior, IPC and the FatimaMessage wire protocol are unchanged. The builder still uses gRPC, so gRPC remains a core dependency.

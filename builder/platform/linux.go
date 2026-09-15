@@ -32,7 +32,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/v2"
 )
 
 type OSPlatform struct {

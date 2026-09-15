@@ -21,8 +21,8 @@
 package infra
 
 import (
-	"github.com/fatima-go/fatima-core/builder"
-	"github.com/fatima-go/fatima-core/monitor"
+	"github.com/fatima-go/fatima-core/v2/builder"
+	"github.com/fatima-go/fatima-core/v2/monitor"
 	"github.com/fatima-go/fatima-log"
 )
 

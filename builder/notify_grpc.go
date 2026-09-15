@@ -26,9 +26,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatima-go/fatima-core"
-	proto "github.com/fatima-go/fatima-core/builder/fatima.message.v1"
-	"github.com/fatima-go/fatima-core/monitor"
+	"github.com/fatima-go/fatima-core/v2"
+	proto "github.com/fatima-go/fatima-core/v2/builder/fatima.message.v1"
+	"github.com/fatima-go/fatima-core/v2/monitor"
 	"github.com/fatima-go/fatima-log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
