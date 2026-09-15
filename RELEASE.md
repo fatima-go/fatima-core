@@ -1,5 +1,21 @@
 # release #
 
+## v1.3.7 ##
+- `DeploymentManagement` gRPC 서비스 추가 (`Open`, `Heartbeat`, `Detach`)
+  - 배포를 시작한 CLI의 관리 세션을 조회용 연결과 구분
+  - `ManagementCredential`로 재접속 시 동일 관리 세션을 식별
+  - `opm/lifecycle`: heartbeat 주기 10초, 마지막 수신 후 만료 기준 20초 및 작업 종료 상태 판정 제공
+- `PackageDeployment.Cancel` gRPC API 및 `Target.cancel_supported` 추가
+  - 미실행 배포를 취소하고 지연 도착한 실행 요청을 차단하기 위한 계약 제공
+  - 실행 중인 작업은 현재 상태를 반환하여 완료 결과를 계속 확인
+- 배포 상태·복구 정보 확장
+  - `CreateRollout.management` 및 `Rollout.management_session_id`로 배포와 관리 세션 연결
+  - 종료 사유(`end_reason`), 마지막·다음 확인 시각(`last_checked_at`, `next_check_at`), 새 배포 제한 여부(`blocks_deployment`) 추가
+  - `RolloutConflict` gRPC 오류 상세에 기존 배포 ID·그룹·프로세스 제공
+- `Rollout.next_target_start_at` 추가
+  - 다음 서버 배포 시작 예정 시각(ms)을 전달하여 대상 간 대기 및 CLI 카운트다운 지원
+  - 0은 예정된 대상 간 대기가 없음을 의미하며, 결과 재확인 시각(`next_check_at`)과 구분
+
 ## v1.3.6 ##
 - `DeploymentHistory` gRPC 서비스 추가 (`List`)
   - rohis가 프로세스별 배포 이력을 gRPC로 조회
