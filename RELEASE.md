@@ -1,5 +1,17 @@
 # release #
 
+## v1.4.0 (release preparation) ##
+- 선택적 `StructuredConfig` (`LookupNode`, `DecodeNode`)와 복사본을 반환하는 설정 스냅샷 추가
+- YAML 객체 배열·중첩 배열·타입 보존, 객체 재귀 병합과 배열 전체 교체 지원
+- **동작 변경:** 명시적 `[]`는 기존 GetList에서도 목록을 비움. 생략한 키는 base를 상속
+- **동작 변경:** 명시적 null은 base를 교체하고 문자열 조회에서는 없는 키로 처리. 타입 교체 시 이전 하위 키 제거
+- **동작 변경:** 점 표기 키 충돌은 정렬된 순회로 결정하며 literal a.b가 nested a → b에 우선
+- 배열 내부 문자열의 변수·secret 해석. YAML secret 배열은 각 문자열 요소별로 해석
+- 실제 런타임과 resources 기반 mock 설정에 연결. 기존 Config 구현체의 필수 메서드는 유지
+- 정상 복합 배열 unsupported WARN 제거, 기본 secret 처리와 숫자 getter 오류에서 값 노출 제거
+- [사용법·이관 시 주의사항](docs/structured-config.md)
+- 아직 태그를 생성하거나 게시하지 않은 검수용 준비 버전
+
 ## v1.3.7 ##
 - `DeploymentManagement` gRPC 서비스 추가 (`Open`, `Heartbeat`, `Detach`)
   - 배포를 시작한 CLI의 관리 세션을 조회용 연결과 구분

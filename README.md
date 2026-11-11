@@ -33,3 +33,8 @@ To https://github.com/fatima-go/fatima-core.git
 # release #
 - [release history](./RELEASE.md)
 
+
+## YAML 구조화 설정
+
+v1.4.0 / v2.1.0부터 객체 배열과 타입을 보존하는 선택적 `StructuredConfig` API를 제공한다.
+[사용법과 병합·호환성 규칙](docs/structured-config.md)을 참고한다.
