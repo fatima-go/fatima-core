@@ -69,11 +69,14 @@ type LoadedApplicationConfig struct {
 // If the base file is a single document, the original behaviour applies: base file is loaded first,
 // then the profile override file (application.<profile>.<ext>) is merged on top.
 // predefines may be nil; if provided, ${var.*} placeholders are resolved after loading.
+// Loading remains permissive. Structured.LoadError reports skipped file failures;
+// Structured.HasBaseConfig allows consumers to require a successfully loaded base.
 func LoadApplicationConfig(appDir string, profile string, predefines fatima.Predefines) LoadedApplicationConfig {
 	chosenExt := resolveConfigFormat(appDir, profile)
 	if chosenExt == "" {
 		log.Warn("cannot find application config file in %s", appDir)
 		return LoadedApplicationConfig{
+			Structured:      &ConfigSnapshot{},
 			Values:          make(map[string]string),
 			YamlListKeys:    make(map[string]bool),
 			YamlSkippedKeys: make(map[string]bool),
@@ -82,13 +85,17 @@ func LoadApplicationConfig(appDir string, profile string, predefines fatima.Pred
 
 	loader := configLoaders[chosenExt]
 	merged := newYamlLoadResult()
+	snapshot := &ConfigSnapshot{root: merged.Nodes}
 
 	basePath := filepath.Join(appDir, "application."+chosenExt)
 	if checkFileAvailable(basePath) {
 		log.Info("loading base config: %s", filepath.Base(basePath))
 		if r, err := loader(basePath, profile); err != nil {
-			log.Warn("cannot load base config %s: %s", filepath.Base(basePath), err.Error())
+			diagnostic := fatima.ConfigLoadError{File: filepath.Base(basePath), Err: fatima.ErrConfigLoadFailed}
+			snapshot.loadErrors = append(snapshot.loadErrors, diagnostic)
+			log.Warn("cannot load base config %s: %s", diagnostic.File, diagnostic.Error())
 		} else {
+			snapshot.baseLoaded = true
 			merged.IsMultiDoc = r.IsMultiDoc
 			mergeLoaded(&merged, r, "")
 		}
@@ -101,7 +108,9 @@ func LoadApplicationConfig(appDir string, profile string, predefines fatima.Pred
 		if checkFileAvailable(overridePath) {
 			log.Info("applying profile override: %s", filepath.Base(overridePath))
 			if r, err := loader(overridePath, profile); err != nil {
-				log.Warn("cannot load profile config %s: %s", filepath.Base(overridePath), err.Error())
+				diagnostic := fatima.ConfigLoadError{File: filepath.Base(overridePath), Err: fatima.ErrConfigLoadFailed}
+				snapshot.loadErrors = append(snapshot.loadErrors, diagnostic)
+				log.Warn("cannot load profile config %s: %s", diagnostic.File, diagnostic.Error())
 			} else {
 				mergeLoaded(&merged, r, "profile file "+filepath.Base(overridePath))
 			}
@@ -123,7 +132,7 @@ func LoadApplicationConfig(appDir string, profile string, predefines fatima.Pred
 		YamlListKeys:    merged.ListKeys,
 		YamlSkippedKeys: merged.SkippedKeys,
 		YamlComplexKeys: merged.ComplexKeys,
-		Structured:      &ConfigSnapshot{root: merged.Nodes},
+		Structured:      snapshot,
 	}
 }
 

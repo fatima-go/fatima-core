@@ -127,6 +127,8 @@ type MockConfig struct {
 	yamlSkippedKeys map[string]bool
 }
 
+var _ fatima.ConfigLoadStatus = (*MockConfig)(nil)
+
 func NewMockConfigWithMap(m map[string]string) *MockConfig {
 	return &MockConfig{
 		ConfigSnapshot:  builder.NewStringConfigSnapshot(m),
