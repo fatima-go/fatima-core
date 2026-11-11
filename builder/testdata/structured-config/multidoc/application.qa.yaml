@@ -1,0 +1,7 @@
+server:
+  port: 9999
+services:
+  group:
+    api:
+      - name: must-not-load
+        repository: demo/must-not-load

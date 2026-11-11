@@ -20,6 +20,11 @@
 
 package fatima
 
+import (
+	"errors"
+	"fmt"
+)
+
 type Predefines interface {
 	ResolvePredefine(value string) string
 	GetDefine(key string) (string, bool)
@@ -38,3 +43,30 @@ type Packaging interface {
 	GetHost() string
 	GetGroup() string
 }
+
+// StructuredConfig is an optional extension of Config. Paths contain literal map
+// keys, not dot-separated expressions. An empty path selects the entire root.
+// LookupNode returns a detached copy; (nil, true) denotes explicit null.
+// DecodeNode requires a non-nil pointer and never coerces strings into numbers.
+type StructuredConfig interface {
+	LookupNode(path ...string) (any, bool)
+	DecodeNode(dst any, path ...string) error
+}
+
+var (
+	ErrConfigNodeNotFound  = errors.New("config node not found")
+	ErrConfigTypeMismatch  = errors.New("config node type mismatch")
+	ErrInvalidConfigTarget = errors.New("invalid config decode target")
+)
+
+// ConfigNodeError identifies a path and expected type without exposing values.
+type ConfigNodeError struct {
+	Path     []string
+	Expected string
+	Err      error
+}
+
+func (e *ConfigNodeError) Error() string {
+	return fmt.Sprintf("config path %q: %s (expected %s)", e.Path, e.Err, e.Expected)
+}
+func (e *ConfigNodeError) Unwrap() error { return e.Err }
