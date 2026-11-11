@@ -58,8 +58,34 @@ v2 IPC의 독립 TestTransaction도 통과했다. 전체 검사 통과로 보고
 명시하지 않은 키는 상속한다. 점 표기 충돌은 결정적인 순서를 사용하며 YAML secret 배열은 요소별로 해석한다.
 be-knowledge-svc의 별도 파서 제거와 등록 정책 이관은 이번 변경에 포함하지 않는다.
 
+## 로딩 상태 보완 — 1단계 완료
+
+knowledge-svc 이관 검토에서 발견한 오류 전달 공백을 두 준비 브랜치에 보완했다.
+서비스 수정·통합 검증은 별도 후속 단계이며 이번 보완으로 완료되었다고 판단하지 않는다.
+
+- 기존 `Config`와 `StructuredConfig`를 변경하지 않고 선택적 `ConfigLoadStatus`를 추가했다.
+  `LoadError`는 파일 읽기/파싱 실패 전체를, `HasBaseConfig`는 base 파일의 로딩 성공 여부를 제공한다.
+- 기본 WARN 후 계속 진행 정책, 프로필 전용 파일 허용, 없는 선택적 프로필 파일 허용을 유지한다.
+  base 필수 정책과 기동 중단은 소비 서비스가 선택한다. 변수·secret·업무 검증은 이 상태에 포함하지 않는다.
+- 실제 `NewPropertyConfigReader → DefaultProcessBuilder → FatimaRuntimeProcess.GetConfig`,
+  전역 runtime getter, resources 기반 mock, map 기반 mock과 설정 없는 mock을 점검했다.
+  임베딩된 ConfigSnapshot을 통해 같은 상태를 제공하며 런타임 테스트로 오류 전달을 검증했다.
+- 자체 리뷰에서 `.properties`의 `Scanner.Err()` 누락을 발견하고 수정했다.
+  application 로더는 실패한 파일의 부분값을 버리고 오류를 보고한다.
+  공용 읽기 함수는 부분값과 오류를 함께 반환하므로 기존 predefine 호출자의 부분값 사용은 유지한다.
+- 반환 오류는 파일명·고정 오류 종류만 담는다. 여러 실패를 보존하고, 반환 진단을 변경해도
+  스냅샷은 변하지 않음을 검증했다. 디스크 수정으로 기존 스냅샷의 상태가 바뀌지 않는다.
+
+추가 검증: 양쪽에서 `go test -race ./builder ./runtime ./crypt -count=1`,
+`go build ./...`, `go vet -copylocks=false ./...`, `git diff --check` 통과.
+정상/빈 base, 설정 없음, profile 전용, 선택적 profile 없음, base/profile 각각 및 동시 오류,
+다중 문서의 무시된 별도 파일, 비선택 문서의 문법 오류, 파일 읽기 실패와 properties 스캔 오류를 검증했다.
+전체 테스트와 기본 vet의 기존 제약은 위 기록과 같으며, 이번에는 해당 검사 전체를 재실행하지 않았다.
+
 ## 승인 후 릴리스 단계 (미실행)
 
 사용자가 최종 검수 후 명시적으로 요청하면, 검수된 커밋의 브랜치 반영과
 v1.4.0 / v2.1.0 태그 생성·원격 게시를 진행한다. 그 전에 위 기존 검증 한계의 처리 여부를 확인한다.
-현재 main, 원격 브랜치, 기존 태그는 변경하지 않았다.
+main과 기존 태그는 변경하지 않는다. 정식 릴리스 전 수동 통합 검증을 위해
+v1 개발 브랜치 `feat/yaml-structured-config-v1`을 원격 공유하고,
+knowledge-svc에서 커밋 기반 pseudo-version을 사용한다. 정식 태그 생성은 별도 승인 대상이다.

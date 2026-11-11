@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -11,10 +12,34 @@ import (
 
 // ConfigSnapshot is an immutable view of resolved configuration. Its zero value
 // represents an unavailable configuration. Lookups and decoding return copies.
-type ConfigSnapshot struct{ root map[string]any }
+type ConfigSnapshot struct {
+	root       map[string]any
+	loadErrors []fatima.ConfigLoadError
+	baseLoaded bool
+}
 
 var _ fatima.StructuredConfig = (*ConfigSnapshot)(nil)
 var _ fatima.StructuredConfig = (*PropertyConfigReader)(nil)
+var _ fatima.ConfigLoadStatus = (*ConfigSnapshot)(nil)
+var _ fatima.ConfigLoadStatus = (*PropertyConfigReader)(nil)
+
+// LoadError returns detached diagnostics so callers cannot alter load status.
+// A partial snapshot remains readable even when loading reported errors.
+func (s *ConfigSnapshot) LoadError() error {
+	if s == nil || s.root == nil {
+		return fatima.ErrConfigNotFound
+	}
+	errs := make([]error, len(s.loadErrors))
+	for i, diagnostic := range s.loadErrors {
+		copy := diagnostic
+		errs[i] = &copy
+	}
+	return errors.Join(errs...)
+}
+
+func (s *ConfigSnapshot) HasBaseConfig() bool {
+	return s != nil && s.baseLoaded
+}
 
 // NewStringConfigSnapshot copies flat, already resolved string settings.
 // Keys remain literal; no YAML structure or value types are inferred.

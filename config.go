@@ -53,6 +53,33 @@ type StructuredConfig interface {
 	DecodeNode(dst any, path ...string) error
 }
 
+// ConfigLoadStatus is an optional extension of Config for startup validation.
+// LoadError reports file read/parse failures, or ErrConfigNotFound if no config
+// was found. It does not validate resolved secrets, variables or business rules.
+// HasBaseConfig reports whether the selected base file loaded successfully.
+// Profile-only configurations are valid; consumers may require a base explicitly.
+type ConfigLoadStatus interface {
+	LoadError() error
+	HasBaseConfig() bool
+}
+
+var (
+	ErrConfigNotFound   = errors.New("application config not found")
+	ErrConfigLoadFailed = errors.New("application config file could not be loaded")
+)
+
+// ConfigLoadError identifies a failed file by basename without exposing its
+// contents. Err is ErrConfigLoadFailed; original parser errors are not retained.
+type ConfigLoadError struct {
+	File string
+	Err  error
+}
+
+func (e *ConfigLoadError) Error() string {
+	return fmt.Sprintf("config file %q: %s", e.File, e.Err)
+}
+func (e *ConfigLoadError) Unwrap() error { return e.Err }
+
 var (
 	ErrConfigNodeNotFound  = errors.New("config node not found")
 	ErrConfigTypeMismatch  = errors.New("config node type mismatch")

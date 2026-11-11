@@ -83,5 +83,8 @@ func readProperties(path string) (map[string]string, error) {
 		resolved[key] = val
 	}
 
+	if err := scanner.Err(); err != nil {
+		return resolved, err
+	}
 	return resolved, nil
 }
