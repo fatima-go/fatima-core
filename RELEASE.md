@@ -1,6 +1,6 @@
 # release #
 
-## v1.4.0 (release preparation) ##
+## v1.4.0 ##
 - 선택적 `StructuredConfig` (`LookupNode`, `DecodeNode`)와 복사본을 반환하는 설정 스냅샷 추가
 - 선택적 `ConfigLoadStatus` (`LoadError`, `HasBaseConfig`)로 파일 로딩 실패·base 로딩 여부 조회 지원. 실제 runtime·mock 연결, 기본 WARN 후 계속 진행 정책 유지
 - `.properties` 스캔 오류 누락 수정: 오류를 보고하고 실패한 파일의 일부 값이 적용되지 않도록 처리
@@ -12,7 +12,6 @@
 - 실제 런타임과 resources 기반 mock 설정에 연결. 기존 Config 구현체의 필수 메서드는 유지
 - 정상 복합 배열 unsupported WARN 제거, 기본 secret 처리와 숫자 getter 오류에서 값 노출 제거
 - [사용법·이관 시 주의사항](docs/structured-config.md)
-- 아직 태그를 생성하거나 게시하지 않은 검수용 준비 버전
 
 ## v1.3.7 ##
 - `DeploymentManagement` gRPC 서비스 추가 (`Open`, `Heartbeat`, `Detach`)
