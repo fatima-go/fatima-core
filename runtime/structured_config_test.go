@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	fatima "github.com/fatima-go/fatima-core/v2"
-	"github.com/fatima-go/fatima-core/v2/builder"
+	fatima "github.com/fatima-go/fatima-core"
+	"github.com/fatima-go/fatima-core/builder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

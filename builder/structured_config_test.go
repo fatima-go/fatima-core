@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	fatima "github.com/fatima-go/fatima-core/v2"
+	fatima "github.com/fatima-go/fatima-core"
 	log "github.com/fatima-go/fatima-log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	fatima "github.com/fatima-go/fatima-core/v2"
+	fatima "github.com/fatima-go/fatima-core"
 )
 
 // ConfigSnapshot is an immutable view of resolved configuration. Its zero value
