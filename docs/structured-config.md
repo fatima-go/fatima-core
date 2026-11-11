@@ -166,8 +166,50 @@ YAML의 map 키는 문자열이어야 하며, 중복 YAML 키와 잘못된 YAML�
 구조화 조회는 두 경로를 모두 보존한다. 혼동을 피하려면 충돌하는 설정을 함께 쓰지 않는다.
 
 `LoadApplicationConfig`의 기존 시그니처와 **파일 로딩 실패 시 WARN 후 계속 진행하는 정책**을 유지한다.
-이 API를 엄격한 기동 검증으로 취급하지 않는다. 실패한 파일은 적용하지 않으며,
-소비자는 필요한 노드의 존재·타입과 업무 의미를 확인해야 한다. 이번 변경에 엄격한 로딩 진입점이나 동적 재로딩은 포함하지 않는다.
+실패한 파일은 적용하지 않으며, 엄격한 기동 검증이 필요한 서비스는 다음 선택적 인터페이스를 확인한다.
+
+```go
+config := runtime.GetFatimaRuntime().GetConfig()
+status, ok := config.(fatima.ConfigLoadStatus)
+if !ok {
+    return fmt.Errorf("configuration load status is unavailable")
+}
+if err := status.LoadError(); err != nil {
+    return fmt.Errorf("configuration startup validation failed: %w", err)
+}
+// base 파일이 필수인 서비스에서만 검사한다.
+if !status.HasBaseConfig() {
+    return fmt.Errorf("base application configuration is required")
+}
+// 이후 StructuredConfig로 조회하고 서비스의 업무 검증을 수행한다.
+```
+
+| 파일 로딩 상태 | LoadError | HasBaseConfig |
+|---|---|---|
+| 정상 base, profile 없음 | nil | true |
+| 정상 base + 정상 profile | nil | true |
+| 문법상 정상인 빈 base | nil | true |
+| base 없음, 정상 profile만 존재 | nil | false |
+| 설정 파일 전부 없음 | ErrConfigNotFound | false |
+| base 읽기·파싱 실패 | ErrConfigLoadFailed | false |
+| 정상 base + profile 읽기·파싱 실패 | ErrConfigLoadFailed | true |
+
+`HasBaseConfig`는 선택된 **base 파일**의 로딩 성공 여부이며, 다중 문서 내부의 base 블록이나
+필수 키 존재를 보장하지 않는다. 없는 별도 profile 파일과 다중 문서 모드에서 무시하는 별도 파일은 오류가 아니다.
+정상적인 profile 전용 사용은 그대로 허용하며, base 필수 여부는 소비 서비스가 결정한다.
+
+`errors.Is`로 오류 종류를 구분하고, `errors.As`로 `*fatima.ConfigLoadError`의 `File`(파일명)을 얻는다.
+여러 파일이 실패하면 모든 오류를 `errors.Join`으로 보존한다. 원본 파서 오류·설정값은 노출하지 않는다.
+`.properties`의 스캔 오류(읽기 실패·허용 길이 초과)도 파일 실패로 보고하며 부분 데이터는 적용하지 않는다.
+이전에는 스캔 오류가 누락되어 읽은 일부 값만 적용될 수 있었다.
+
+상태는 로딩 시점의 스냅샷이며 조회 때 파일을 다시 읽지 않는다. 반환된 진단을 변경해도 원본 상태는 유지된다.
+`builder.LoadApplicationConfig(...).Structured`, 실제 runtime의 config와 resources 기반 `MockConfig`에서
+같은 인터페이스를 제공한다. `NewMockConfigWithMap`은 파일을 읽지 않으므로 오류 없이 base 여부는 false다.
+프로젝트/설정 파일을 찾지 못한 mock은 `ErrConfigNotFound`를 반환한다.
+
+`LoadError`는 변수·secret 해석 성공이나 필수값·업무 의미를 검증하지 않는다.
+소비자는 필요한 노드의 존재·타입과 업무 의미를 계속 확인해야 한다. 자동 기동 중단과 동적 재로딩은 포함하지 않는다.
 
 `.properties`의 구조화 조회는 평평한 문자열 키/값만 제공한다.
 예를 들어 `a.b=123`은 `LookupNode("a.b")`로 문자열 `"123"`을 얻으며, 중첩 객체나 정수로 추정하지 않는다.
