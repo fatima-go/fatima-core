@@ -1,0 +1,23 @@
+cases:
+  shrink:
+    - {name: first, enabled: true}
+    - {name: second, enabled: false}
+  clear:
+    - {name: old}
+  inherit:
+    - {name: keep}
+  nullable: [old]
+  switch:
+    old:
+      enabled: true
+  nested:
+    - [1, 2]
+    - [3]
+  mixed:
+    - {name: object}
+    - text
+    - 7
+    - true
+    - null
+  emptyObject: {}
+  values: ["a,b", "c", "", "  d  "]

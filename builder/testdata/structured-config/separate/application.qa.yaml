@@ -1,0 +1,15 @@
+server:
+  port: 18080
+  labels: [qa]
+services:
+  references:
+    - name: qa-storage-lib
+      repository: demo/qa-storage-lib
+  exclude: []
+  group:
+    api:
+      - name: qa-order-api
+        repository: demo/qa-order-api
+        priority: 1
+        tags: [qa]
+        paths: ["src/**"]

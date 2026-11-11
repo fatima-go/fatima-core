@@ -1,0 +1,41 @@
+server:
+  port: 8080
+  enabled: true
+  labels: [base, shared]
+  caption: "left,right"
+services:
+  git:
+    base: https://git.example.test
+  references:
+    - name: storage-lib
+      repository: demo/storage-lib
+      coordinates: ["sample:storage-lib"]
+    - name: network-lib
+      repository: demo/network-lib
+  exclude:
+    - repositories: [demo/order-api]
+      paths: ["tools/**", "testdata/**"]
+      premise: example-policy
+  group:
+    api:
+      - name: order-api
+        repository: demo/order-api
+        priority: 10
+        tags: [order, public]
+        paths: ["src/**", "queries/**"]
+      - name: account-api
+        repository: demo/account-api
+        priority: 20
+    backend:
+      - name: batch-worker
+        repository: demo/batch-worker
+connectors:
+  - name: cache
+    enabled: true
+    pool:
+      size: 4
+    auth:
+      token.secret: "${var.fixture.token}"
+    nodes:
+      - host: "${var.fixture.cache.host}"
+        port: 6379

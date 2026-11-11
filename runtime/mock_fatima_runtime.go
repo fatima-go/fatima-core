@@ -119,14 +119,19 @@ func (m *MockFatimaRuntime) Stop() {
 }
 
 type MockConfig struct {
+	*builder.ConfigSnapshot
+	yamlComplexKeys map[string]bool
 	m               map[string]string
 	format          string
 	yamlListKeys    map[string]bool
 	yamlSkippedKeys map[string]bool
 }
 
+var _ fatima.ConfigLoadStatus = (*MockConfig)(nil)
+
 func NewMockConfigWithMap(m map[string]string) *MockConfig {
 	return &MockConfig{
+		ConfigSnapshot:  builder.NewStringConfigSnapshot(m),
 		m:               m,
 		yamlListKeys:    make(map[string]bool),
 		yamlSkippedKeys: make(map[string]bool),
@@ -152,6 +157,8 @@ func NewMockConfig() *MockConfig {
 
 	loaded := builder.LoadApplicationConfig(resourcesDir, profile, nil)
 	return &MockConfig{
+		ConfigSnapshot:  loaded.Structured,
+		yamlComplexKeys: loaded.YamlComplexKeys,
 		m:               loaded.Values,
 		format:          loaded.Format,
 		yamlListKeys:    loaded.YamlListKeys,
@@ -179,7 +186,7 @@ func (c *MockConfig) GetInt(key string) (int, error) {
 	}
 	i, err := strconv.Atoi(v)
 	if err != nil {
-		return 0, fmt.Errorf("not numeric value for key %s : %s", key, err.Error())
+		return 0, fmt.Errorf("not numeric value for key : %s", key)
 	}
 	return i, nil
 }
@@ -197,7 +204,7 @@ func (c *MockConfig) GetBool(key string) (bool, error) {
 }
 
 func (c *MockConfig) GetList(key string) ([]string, error) {
-	if c.yamlSkippedKeys[key] {
+	if c.yamlSkippedKeys[key] || c.yamlComplexKeys[key] {
 		return nil, fmt.Errorf("unsupported value type for list at key : %s", key)
 	}
 

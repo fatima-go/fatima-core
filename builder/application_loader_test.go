@@ -381,6 +381,8 @@ func newReaderFromDir(t *testing.T, dir string, profile string) *PropertyConfigR
 	t.Helper()
 	loaded := LoadApplicationConfig(dir, profile, nil)
 	return &PropertyConfigReader{
+		ConfigSnapshot:  loaded.Structured,
+		yamlComplexKeys: loaded.YamlComplexKeys,
 		configuration:   loaded.Values,
 		format:          loaded.Format,
 		yamlListKeys:    loaded.YamlListKeys,

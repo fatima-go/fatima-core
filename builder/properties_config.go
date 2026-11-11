@@ -32,6 +32,8 @@ import (
 )
 
 type PropertyConfigReader struct {
+	*ConfigSnapshot
+	yamlComplexKeys map[string]bool
 	predefines      fatima.Predefines
 	configuration   map[string]string
 	format          string
@@ -47,6 +49,8 @@ func NewPropertyConfigReader(env fatima.FatimaEnv, predefines fatima.Predefines)
 		predefines,
 	)
 	instance := &PropertyConfigReader{
+		ConfigSnapshot:  loaded.Structured,
+		yamlComplexKeys: loaded.YamlComplexKeys,
 		predefines:      predefines,
 		configuration:   loaded.Values,
 		format:          loaded.Format,
@@ -77,7 +81,7 @@ func (this *PropertyConfigReader) GetInt(key string) (int, error) {
 
 	i, err := strconv.Atoi(v)
 	if err != nil {
-		return 0, fmt.Errorf("not numeric value for key %s : %s", key, err.Error())
+		return 0, fmt.Errorf("not numeric value for key : %s", key)
 	}
 
 	return i, nil
@@ -98,7 +102,7 @@ func (this *PropertyConfigReader) GetBool(key string) (bool, error) {
 }
 
 func (this *PropertyConfigReader) GetList(key string) ([]string, error) {
-	if this.yamlSkippedKeys[key] {
+	if this.yamlSkippedKeys[key] || this.yamlComplexKeys[key] {
 		return nil, fmt.Errorf("unsupported value type for list at key : %s", key)
 	}
 
