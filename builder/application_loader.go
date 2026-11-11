@@ -44,11 +44,11 @@ func loadPropertiesFile(path string, _ string) (yamlLoadResult, error) {
 	if err != nil {
 		return yamlLoadResult{}, err
 	}
-	return yamlLoadResult{
-		Values:      values,
-		ListKeys:    make(map[string]bool),
-		SkippedKeys: make(map[string]bool),
-	}, nil
+	r := newYamlLoadResult()
+	for k, v := range values {
+		r.Nodes[k] = v
+	}
+	return r, nil
 }
 
 // LoadedApplicationConfig is the result of LoadApplicationConfig.
@@ -56,7 +56,9 @@ type LoadedApplicationConfig struct {
 	Values          map[string]string
 	Format          string          // "yaml" | "yml" | "properties" | "" (no file found)
 	YamlListKeys    map[string]bool // keys whose original yaml value was a scalar list
-	YamlSkippedKeys map[string]bool // keys skipped due to complex yaml types
+	YamlSkippedKeys map[string]bool // Deprecated: always empty; complex arrays are preserved.
+	YamlComplexKeys map[string]bool // arrays unavailable through GetList
+	Structured      *ConfigSnapshot // resolved immutable snapshot; properties keys remain literal
 }
 
 // LoadApplicationConfig loads merged application config from appDir.
@@ -88,7 +90,7 @@ func LoadApplicationConfig(appDir string, profile string, predefines fatima.Pred
 			log.Warn("cannot load base config %s: %s", filepath.Base(basePath), err.Error())
 		} else {
 			merged.IsMultiDoc = r.IsMultiDoc
-			mergeFlattened(&merged, r, "")
+			mergeLoaded(&merged, r, "")
 		}
 	}
 
@@ -101,19 +103,18 @@ func LoadApplicationConfig(appDir string, profile string, predefines fatima.Pred
 			if r, err := loader(overridePath, profile); err != nil {
 				log.Warn("cannot load profile config %s: %s", filepath.Base(overridePath), err.Error())
 			} else {
-				mergeFlattened(&merged, r, "profile file "+filepath.Base(overridePath))
+				mergeLoaded(&merged, r, "profile file "+filepath.Base(overridePath))
 			}
 		}
 	}
 
-	for k, v := range merged.Values {
-		if predefines != nil {
-			v = predefines.ResolvePredefine(v)
+	resolveConfigStrings(merged.Nodes, "", predefines)
+	if chosenExt == "properties" {
+		for k, v := range merged.Nodes {
+			merged.Values[k] = v.(string)
 		}
-		if strings.HasSuffix(k, SecretKeySuffix) {
-			v = crypt.ResolveSecret(v)
-		}
-		merged.Values[k] = v
+	} else {
+		flattenYaml("", merged.Nodes, &merged)
 	}
 
 	return LoadedApplicationConfig{
@@ -121,6 +122,8 @@ func LoadApplicationConfig(appDir string, profile string, predefines fatima.Pred
 		Format:          chosenExt,
 		YamlListKeys:    merged.ListKeys,
 		YamlSkippedKeys: merged.SkippedKeys,
+		YamlComplexKeys: merged.ComplexKeys,
+		Structured:      &ConfigSnapshot{root: merged.Nodes},
 	}
 }
 
@@ -140,4 +143,32 @@ func resolveConfigFormat(appDir string, profile string) string {
 		}
 	}
 	return ""
+}
+
+// Arrays do not change the logical key suffix. Every string leaf is resolved once
+// before either view is exposed; resolved strings are never parsed as YAML again.
+func resolveConfigStrings(node any, path string, predefines fatima.Predefines) any {
+	switch n := node.(type) {
+	case map[string]any:
+		for _, k := range sortedConfigKeys(n) {
+			next := k
+			if path != "" {
+				next = path + "." + k
+			}
+			n[k] = resolveConfigStrings(n[k], next, predefines)
+		}
+	case []any:
+		for i, v := range n {
+			n[i] = resolveConfigStrings(v, path, predefines)
+		}
+	case string:
+		if predefines != nil {
+			n = predefines.ResolvePredefine(n)
+		}
+		if strings.HasSuffix(path, SecretKeySuffix) {
+			n = crypt.ResolveSecret(n)
+		}
+		return n
+	}
+	return node
 }

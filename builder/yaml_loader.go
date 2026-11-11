@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
+	"sort"
 	"strings"
 
 	log "github.com/fatima-go/fatima-log"
@@ -35,11 +37,15 @@ type yamlLoadResult struct {
 	ListKeys    map[string]bool
 	SkippedKeys map[string]bool
 	IsMultiDoc  bool
+	Nodes       map[string]any
+	ComplexKeys map[string]bool
 }
 
 func newYamlLoadResult() yamlLoadResult {
 	return yamlLoadResult{
 		Values:      make(map[string]string),
+		Nodes:       make(map[string]any),
+		ComplexKeys: make(map[string]bool),
 		ListKeys:    make(map[string]bool),
 		SkippedKeys: make(map[string]bool),
 	}
@@ -54,20 +60,27 @@ func loadYamlFile(path string, profile string) (yamlLoadResult, error) {
 	docs := make([]map[string]any, 0)
 	dec := yaml.NewDecoder(bytes.NewReader(data))
 	for {
-		var doc map[string]any
-		if err = dec.Decode(&doc); err == io.EOF {
+		var raw any
+		if err = dec.Decode(&raw); err == io.EOF {
 			break
 		} else if err != nil {
-			return yamlLoadResult{}, err
+			return yamlLoadResult{}, fmt.Errorf("invalid YAML configuration")
 		}
-		if doc != nil {
+		if raw != nil {
+			doc, ok := raw.(map[string]any)
+			if !ok {
+				return yamlLoadResult{}, fmt.Errorf("YAML configuration requires a string-keyed object root")
+			}
+			if err := validateConfigNode(doc); err != nil {
+				return yamlLoadResult{}, err
+			}
 			docs = append(docs, doc)
 		}
 	}
 
 	if len(docs) <= 1 {
 		if len(docs) == 1 {
-			return flattenDoc(docs[0]), nil
+			return yamlDocument(docs[0]), nil
 		}
 		return newYamlLoadResult(), nil
 	}
@@ -78,13 +91,13 @@ func loadYamlFile(path string, profile string) (yamlLoadResult, error) {
 
 	base, matching := classifyDocs(docs, profile, path)
 	if base != nil {
-		mergeFlattened(&result, flattenDoc(base), "")
+		mergeLoaded(&result, yamlDocument(base), "")
 	}
 	for i, m := range matching {
 		if i > 0 {
 			log.Warn("duplicate profile '%s' block in %s, later overrides earlier", profile, path)
 		}
-		mergeFlattened(&result, flattenDoc(m), fmt.Sprintf("profile '%s'", profile))
+		mergeLoaded(&result, yamlDocument(m), fmt.Sprintf("profile '%s'", profile))
 	}
 	return result, nil
 }
@@ -130,72 +143,109 @@ func extractAndStripProfile(doc map[string]any) string {
 	return profile
 }
 
-// flattenDoc flattens a single yaml document into a fresh yamlLoadResult.
-// Intra-document key conflicts (e.g. dot-notation key vs nested map) are logged as WARN.
-func flattenDoc(doc map[string]any) yamlLoadResult {
+// yamlDocument retains the YAML types until all selected documents are merged.
+func yamlDocument(doc map[string]any) yamlLoadResult {
 	r := newYamlLoadResult()
-	flattenYaml("", doc, &r)
+	r.Nodes = doc
 	return r
 }
 
-// mergeFlattened merges src into dst. For each key in src whose value differs from
-// the existing value in dst, logs INFO with sourceLabel before overwriting.
-// Pass an empty sourceLabel when merging a base with no prior content (no overrides expected).
-func mergeFlattened(dst *yamlLoadResult, src yamlLoadResult, sourceLabel string) {
-	for k, v := range src.Values {
-		if existing, exists := dst.Values[k]; exists && existing != v && sourceLabel != "" {
-			log.Info("config key '%s' overridden by %s", k, sourceLabel)
-		}
-		dst.Values[k] = v
-	}
-	for k := range src.ListKeys {
-		dst.ListKeys[k] = true
-	}
-	for k := range src.SkippedKeys {
-		dst.SkippedKeys[k] = true
-	}
+func mergeLoaded(dst *yamlLoadResult, src yamlLoadResult, label string) {
+	mergeConfigMaps(dst.Nodes, src.Nodes, "", label)
 }
 
-func flattenYaml(prefix string, in map[string]any, result *yamlLoadResult) {
-	for k, v := range in {
+func mergeConfigMaps(dst, src map[string]any, prefix, label string) {
+	for _, k := range sortedConfigKeys(src) {
+		v := src[k]
 		key := k
 		if prefix != "" {
 			key = prefix + "." + k
 		}
-		switch t := v.(type) {
-		case map[string]any:
-			flattenYaml(key, t, result)
-		case []any:
-			flattenYamlSlice(key, t, result)
-		case nil:
-			// skip
-		default:
-			if _, exists := result.Values[key]; exists {
-				log.Warn("yaml key conflict at '%s', overwriting previous value", key)
+		previous, exists := dst[k]
+		oldMap, oldOK := previous.(map[string]any)
+		newMap, newOK := v.(map[string]any)
+		if oldOK && newOK {
+			mergeConfigMaps(oldMap, newMap, key, label)
+		} else {
+			if exists && !reflect.DeepEqual(previous, v) && label != "" {
+				log.Info("config key '%s' overridden by %s", key, label)
 			}
-			result.Values[key] = fmt.Sprintf("%v", t)
+			dst[k] = cloneConfigNode(v)
 		}
 	}
 }
 
-// flattenYamlSlice joins scalar list elements with comma.
-// Records the key in ListKeys on success, or SkippedKeys if any element is a complex type.
-func flattenYamlSlice(key string, arr []any, result *yamlLoadResult) {
-	parts := make([]string, 0, len(arr))
-	for _, elem := range arr {
-		switch elem.(type) {
-		case map[string]any, []any:
-			log.Warn("yaml array of complex types unsupported at key '%s', skipped", key)
-			result.SkippedKeys[key] = true
-			return
-		case nil:
-			// skip nil elements
-		default:
-			parts = append(parts, fmt.Sprintf("%v", elem))
+func sortedConfigKeys(m map[string]any) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// Non-string YAML map keys have no representation in the public path API.
+func validateConfigNode(v any) error {
+	switch n := v.(type) {
+	case map[any]any:
+		return fmt.Errorf("YAML configuration requires string map keys")
+	case map[string]any:
+		for _, k := range sortedConfigKeys(n) {
+			if err := validateConfigNode(n[k]); err != nil {
+				return err
+			}
+		}
+	case []any:
+		for _, value := range n {
+			if err := validateConfigNode(value); err != nil {
+				return err
+			}
 		}
 	}
-	if len(parts) > 0 {
-		result.Values[key] = strings.Join(parts, ",")
-		result.ListKeys[key] = true
+	return nil
+}
+
+// Project after merging/resolving. Sorted traversal makes literal dotted keys
+// win over equivalent nested paths, independent of Go map iteration order.
+func flattenYaml(prefix string, in map[string]any, result *yamlLoadResult) {
+	for _, k := range sortedConfigKeys(in) {
+		v := in[k]
+		key := k
+		if prefix != "" {
+			key = prefix + "." + k
+		}
+		if m, ok := v.(map[string]any); ok {
+			flattenYaml(key, m, result)
+			continue
+		}
+		if _, exists := result.Values[key]; exists || result.ComplexKeys[key] {
+			log.Warn("yaml key conflict at '%s', overwriting previous value", key)
+		}
+		delete(result.Values, key)
+		delete(result.ListKeys, key)
+		delete(result.ComplexKeys, key)
+		switch n := v.(type) {
+		case []any:
+			parts := make([]string, 0, len(n))
+			complex := false
+			for _, elem := range n {
+				switch elem.(type) {
+				case map[string]any, []any:
+					complex = true
+				case nil:
+				default:
+					parts = append(parts, fmt.Sprint(elem))
+				}
+			}
+			if complex {
+				result.ComplexKeys[key] = true
+				continue
+			}
+			result.Values[key] = strings.Join(parts, ",")
+			result.ListKeys[key] = true
+		case nil: // Explicit null is retained in Nodes but has no string projection.
+		default:
+			result.Values[key] = fmt.Sprint(n)
+		}
 	}
 }

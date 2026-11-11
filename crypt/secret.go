@@ -73,7 +73,7 @@ func ResolveSecret(src string) string {
 		return secretDecryptFuncAWS(secret)
 	}
 
-	log.Warn("scheme %s is not supported", scheme)
+	log.Warn("secret scheme is not supported")
 	return src
 }
 
@@ -124,13 +124,13 @@ func init() {
 func secretDecryptNative(src string) string {
 	ciphertextBytes, err := base64.StdEncoding.DecodeString(src)
 	if err != nil {
-		log.Warn("cipher [%s] is invalid base64 format : %s", src, err.Error())
+		log.Warn("secret is invalid base64 format")
 		return src
 	}
 
 	cipherBlock, err := aes.NewCipher(cipherKeyByteFromProfile)
 	if err != nil {
-		log.Warn("creating cipher error. key=%v, error=%s", cipherKeyByteFromProfile, err.Error())
+		log.Warn("creating secret cipher failed")
 		return src
 	}
 
@@ -145,7 +145,7 @@ func secretDecryptNative(src string) string {
 func secretEncryptNative(src string) string {
 	cipherBlock, err := aes.NewCipher(cipherKeyByteFromProfile)
 	if err != nil {
-		log.Warn("NewCipher error [%s] : %s", cipherKeyByteFromProfile, err.Error())
+		log.Warn("creating secret cipher failed")
 		return src
 	}
 
@@ -172,7 +172,7 @@ func unpad(blocks []byte) []byte {
 func secretDecryptB64(src string) string {
 	decoded, err := base64.StdEncoding.DecodeString(src)
 	if err != nil {
-		log.Warn("cipher [%s] base64 decoding error : %s", src, err.Error())
+		log.Warn("secret base64 decoding failed")
 		return src
 	}
 	return string(decoded)

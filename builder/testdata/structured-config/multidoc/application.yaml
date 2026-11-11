@@ -1,0 +1,35 @@
+server:
+  port: 8080
+services:
+  group:
+    api:
+      - name: base-api
+        repository: demo/base-api
+---
+fatima:
+  profile: qa
+server:
+  port: 18080
+services:
+  group:
+    api:
+      - name: qa-first-api
+        repository: demo/qa-first-api
+---
+fatima:
+  profile: prod
+server:
+  port: 28080
+services:
+  group:
+    api:
+      - name: prod-api
+        repository: demo/prod-api
+---
+fatima:
+  profile: qa
+services:
+  group:
+    api:
+      - name: qa-final-api
+        repository: demo/qa-final-api

@@ -1,0 +1,6 @@
+cases:
+  shrink:
+    - {name: only}
+  clear: []
+  nullable: null
+  switch: [new]
