@@ -32,9 +32,12 @@ import (
 type provideFunc func() string
 type providePidFunc func(string) (int, error)
 
+type provideProcFunc func(string) string
+
 type envProvider struct {
 	getPid         providePidFunc
 	getSockDir     provideFunc
+	getProcSockDir provideProcFunc
 	buildAddress   provideFunc
 	getProgramName provideFunc
 }
@@ -44,6 +47,7 @@ var envProvideHelper = envProvider{}
 func init() {
 	envProvideHelper.getPid = getPid
 	envProvideHelper.getSockDir = getSockDir
+	envProvideHelper.getProcSockDir = buildSockDir
 	envProvideHelper.buildAddress = buildAddress
 	envProvideHelper.getProgramName = getProgramName
 }

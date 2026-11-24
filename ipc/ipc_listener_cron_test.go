@@ -34,6 +34,7 @@ var cronSimulator = &dummyCronRunner{}
 func beforeTestProviderForCronListener() {
 	envProvideHelper.getPid = mockGetPid
 	envProvideHelper.getSockDir = mockGetSockDir
+	envProvideHelper.getProcSockDir = mockGetProcSockDir
 	envProvideHelper.getProgramName = mockGetJunoProgramName
 	envProvideHelper.buildAddress = mockBuildAddress
 	cronRunner = cronSimulator.Rerun
