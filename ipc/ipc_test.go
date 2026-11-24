@@ -52,6 +52,10 @@ func mockGetSockDir() string {
 	return "/tmp"
 }
 
+func mockGetProcSockDir(proc string) string {
+	return mockGetSockDir()
+}
+
 func mockBuildAddress() string {
 	return filepath.Join(envProvideHelper.getSockDir(),
 		fmt.Sprintf("%s%s.%d.sock",
@@ -65,6 +69,7 @@ func mockBuildAddress() string {
 func beforeTestEnv() {
 	envProvideHelper.getPid = mockGetPid
 	envProvideHelper.getSockDir = mockGetSockDir
+	envProvideHelper.getProcSockDir = mockGetProcSockDir
 	envProvideHelper.buildAddress = mockBuildAddress
 	envProvideHelper.getProgramName = mockGetProgramName
 }
