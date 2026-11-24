@@ -426,3 +426,95 @@ secret.secret: b64:Zml4dHVyZS10b2tlbg==
 	require.Error(t, err)
 	assert.NotContains(t, err.Error(), "fixture-token")
 }
+
+// Captures the synchronous stdout logger; must not run in parallel.
+func captureConfigLog(t *testing.T, fn func()) string {
+	t.Helper()
+	capture, err := os.CreateTemp(t.TempDir(), "log")
+	require.NoError(t, err)
+	old := os.Stdout
+	os.Stdout = capture
+	level := log.GetLevel()
+	log.SetLevel(log.LOG_TRACE)
+	defer func() { os.Stdout = old; log.SetLevel(level); capture.Close() }()
+	fn()
+	require.NoError(t, capture.Sync())
+	data, err := os.ReadFile(capture.Name())
+	require.NoError(t, err)
+	return string(data)
+}
+
+func overrideLogLines(output string) []string {
+	lines := make([]string, 0)
+	for _, line := range strings.Split(output, "\n") {
+		if strings.Contains(line, "overridden by") {
+			lines = append(lines, line)
+		}
+	}
+	return lines
+}
+
+func TestConfigOverrideLogSummarizedPerMerge(t *testing.T) {
+	t.Run("multi-doc profile block", func(t *testing.T) {
+		dir := t.TempDir()
+		writeTestFile(t, dir, "application.yaml", `github.token.secret: base-token
+jira.api.token.secret: base-jira
+openai.api.key.secret: base-openai
+same.value: kept
+db: {host: base-host, port: 3306}
+---
+fatima: {profile: dev}
+github.token.secret: dev-token
+jira.api.token.secret: dev-jira
+openai.api.key.secret: dev-openai
+same.value: kept
+db: {host: dev-host}
+new.key: added
+`)
+		output := captureConfigLog(t, func() { LoadApplicationConfig(dir, "dev", nil) })
+		lines := overrideLogLines(output)
+		require.Len(t, lines, 1)
+		assert.Contains(t, lines[0], "config keys overridden by profile 'dev' (4): db.host, github.token.secret, jira.api.token.secret, openai.api.key.secret")
+		assert.NotContains(t, output, "config key '")
+		assert.NotContains(t, output, "dev-token")
+	})
+
+	t.Run("duplicate profile blocks log one line each", func(t *testing.T) {
+		dir := t.TempDir()
+		writeTestFile(t, dir, "application.yaml", `a: base
+b: base
+c: base
+---
+fatima: {profile: dev}
+a: dev1
+b: dev1
+---
+fatima: {profile: dev}
+a: dev2
+c: dev2
+`)
+		output := captureConfigLog(t, func() { LoadApplicationConfig(dir, "dev", nil) })
+		lines := overrideLogLines(output)
+		require.Len(t, lines, 2)
+		assert.Contains(t, lines[0], "config keys overridden by profile 'dev' (2): a, b")
+		assert.Contains(t, lines[1], "config keys overridden by profile 'dev' (2): a, c")
+		assert.Contains(t, output, "duplicate profile 'dev' block")
+	})
+
+	t.Run("separate profile file", func(t *testing.T) {
+		dir := t.TempDir()
+		writeTestFile(t, dir, "application.yaml", "key1: base\nkey2: base\n")
+		writeTestFile(t, dir, "application.dev.yaml", "key1: dev\nkey2: dev\n")
+		output := captureConfigLog(t, func() { LoadApplicationConfig(dir, "dev", nil) })
+		lines := overrideLogLines(output)
+		require.Len(t, lines, 1)
+		assert.Contains(t, lines[0], "config keys overridden by profile file application.dev.yaml (2): key1, key2")
+	})
+
+	t.Run("no log without changed values", func(t *testing.T) {
+		dir := t.TempDir()
+		writeTestFile(t, dir, "application.yaml", "key1: same\n---\nfatima: {profile: dev}\nkey1: same\nkey2: new\n")
+		output := captureConfigLog(t, func() { LoadApplicationConfig(dir, "dev", nil) })
+		assert.Empty(t, overrideLogLines(output))
+	})
+}
