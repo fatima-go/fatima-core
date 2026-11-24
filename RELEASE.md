@@ -1,5 +1,14 @@
 # release #
 
+## v2.1.1 ##
+- profile 설정 override 로그를 키마다 한 줄에서 병합 단위 한 줄로 축약 ([#28](https://github.com/fatima-go/fatima-core/issues/28))
+  - 예: `config keys overridden by profile 'dev' (3): github.token.secret, jira.api.token.secret, openai.api.key.secret`
+  - 덮어쓴 키 개수와 정렬된 키 목록을 출력하며 값은 출력하지 않음
+  - 같은 profile 블록이 중복되면 블록마다 한 줄씩 출력
+  - **로그 형식 변경:** 기존 `config key '...' overridden by ...` 문구를 검색·알림에 쓰고 있다면 조건 수정 필요
+- IPC 테스트의 nil pointer panic 수정: client socket 경로 계산을 테스트에서 대체 가능한 env provider 경유로 변경 (런타임 동작 변경 없음)
+- secret 테스트가 전역 복호화 함수를 복원하지 않아 반복 실행(`go test -count=2` 이상) 시 실패하던 문제 수정
+
 ## v2.1.0 ##
 - 선택적 `StructuredConfig` (`LookupNode`, `DecodeNode`)와 복사본을 반환하는 설정 스냅샷 추가
 - 선택적 `ConfigLoadStatus` (`LoadError`, `HasBaseConfig`)로 파일 로딩 실패·base 로딩 여부 조회 지원. 실제 runtime·mock 연결, 기본 WARN 후 계속 진행 정책 유지
@@ -19,6 +28,16 @@
 - 런타임·컴포넌트·IPC 및 기존 FatimaMessage 통신 동작 유지
 - 기존 v1.x 태그는 유지되며 기존 프로그램의 강제 업데이트는 불필요
 - v2로 업그레이드하는 프로그램은 core import 경로에 `/v2` 추가 필요
+
+## v1.4.1 ##
+- v1 유지보수 릴리스: `release/1.x`에서 발행하며 v2.1.1과 동일한 변경 포함
+- profile 설정 override 로그를 키마다 한 줄에서 병합 단위 한 줄로 축약 ([#28](https://github.com/fatima-go/fatima-core/issues/28))
+  - 예: `config keys overridden by profile 'dev' (3): github.token.secret, jira.api.token.secret, openai.api.key.secret`
+  - 덮어쓴 키 개수와 정렬된 키 목록을 출력하며 값은 출력하지 않음
+  - 같은 profile 블록이 중복되면 블록마다 한 줄씩 출력
+  - **로그 형식 변경:** 기존 `config key '...' overridden by ...` 문구를 검색·알림에 쓰고 있다면 조건 수정 필요
+- IPC 테스트의 nil pointer panic 수정: client socket 경로 계산을 테스트에서 대체 가능한 env provider 경유로 변경 (런타임 동작 변경 없음)
+- secret 테스트가 전역 복호화 함수를 복원하지 않아 반복 실행(`go test -count=2` 이상) 시 실패하던 문제 수정
 
 ## v1.4.0 ##
 

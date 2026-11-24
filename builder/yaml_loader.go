@@ -150,11 +150,18 @@ func yamlDocument(doc map[string]any) yamlLoadResult {
 	return r
 }
 
+// mergeLoaded merges src into dst. When label is set, keys whose values were
+// replaced are reported in a single INFO line per merge to keep startup logs short.
 func mergeLoaded(dst *yamlLoadResult, src yamlLoadResult, label string) {
-	mergeConfigMaps(dst.Nodes, src.Nodes, "", label)
+	overridden := mergeConfigMaps(dst.Nodes, src.Nodes, "", nil)
+	if label != "" && len(overridden) > 0 {
+		log.Info("config keys overridden by %s (%d): %s", label, len(overridden), strings.Join(overridden, ", "))
+	}
 }
 
-func mergeConfigMaps(dst, src map[string]any, prefix, label string) {
+// mergeConfigMaps merges src into dst and returns the dotted paths of keys whose
+// existing values were replaced by different ones, in sorted traversal order.
+func mergeConfigMaps(dst, src map[string]any, prefix string, overridden []string) []string {
 	for _, k := range sortedConfigKeys(src) {
 		v := src[k]
 		key := k
@@ -165,14 +172,15 @@ func mergeConfigMaps(dst, src map[string]any, prefix, label string) {
 		oldMap, oldOK := previous.(map[string]any)
 		newMap, newOK := v.(map[string]any)
 		if oldOK && newOK {
-			mergeConfigMaps(oldMap, newMap, key, label)
+			overridden = mergeConfigMaps(oldMap, newMap, key, overridden)
 		} else {
-			if exists && !reflect.DeepEqual(previous, v) && label != "" {
-				log.Info("config key '%s' overridden by %s", key, label)
+			if exists && !reflect.DeepEqual(previous, v) {
+				overridden = append(overridden, key)
 			}
 			dst[k] = cloneConfigNode(v)
 		}
 	}
+	return overridden
 }
 
 func sortedConfigKeys(m map[string]any) []string {
