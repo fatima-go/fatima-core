@@ -66,6 +66,11 @@ func TestCreateAndResolveSecret(t *testing.T) {
 
 func TestSetSecretDecryptFunc(t *testing.T) {
 	log.Initialize(log.NewPreference(""))
+	// Restore package-level decryptors so later tests (and -count>1 runs) are unaffected.
+	native, b64, aws := secretDecryptFuncNative, secretDecryptFuncB64, secretDecryptFuncAWS
+	t.Cleanup(func() {
+		secretDecryptFuncNative, secretDecryptFuncB64, secretDecryptFuncAWS = native, b64, aws
+	})
 	_ = SetSecretDecryptFunc(SecretSchemeNative, exampleSecretDecryptNative)
 	_ = SetSecretDecryptFunc(SecretSchemeB64, exampleSecretDecryptB64)
 	_ = SetSecretDecryptFunc(SecretSchemeAWS, exampleSecretDecryptAWS)
