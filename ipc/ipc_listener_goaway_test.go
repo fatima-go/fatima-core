@@ -36,6 +36,7 @@ func mockGetJunoProgramName() string {
 func beforeTestProviderForGoAwayListener() {
 	envProvideHelper.getPid = mockGetPid
 	envProvideHelper.getSockDir = mockGetSockDir
+	envProvideHelper.getProcSockDir = mockGetProcSockDir
 	envProvideHelper.getProgramName = mockGetJunoProgramName
 	envProvideHelper.buildAddress = mockBuildAddress
 	goawayRunner = &dummyGoawayRunner{}

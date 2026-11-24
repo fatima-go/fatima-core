@@ -156,7 +156,7 @@ func buildClientAddress(proc string) (string, error) {
 	}
 
 	return filepath.Join(
-		buildSockDir(proc),
+		envProvideHelper.getProcSockDir(proc),
 		fmt.Sprintf("%s%s.%d.sock",
 			sockFilePrefix,
 			proc,
